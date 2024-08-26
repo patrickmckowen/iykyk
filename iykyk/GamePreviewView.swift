@@ -74,36 +74,7 @@ struct GameTileView: View {
         }
         .frame(width: size, height: size)
         .onAppear {
-            adjustFontSize()
-        }
-    }
-
-    private func adjustFontSize() {
-        let maxWidth = size - 14
-        let maxHeight = size - 14
-        let testFont = UIFont.systemFont(ofSize: 17, weight: .bold)
-        let words = word.text.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-
-        if words.count == 2 {
-            // Two words: split them and calculate size
-            let size1 = (words[0] as NSString).size(withAttributes: [.font: testFont])
-            let size2 = (words[1] as NSString).size(withAttributes: [.font: testFont])
-            let totalHeight = size1.height + size2.height
-            let maxWordWidth = max(size1.width, size2.width)
-
-            if maxWordWidth > maxWidth || totalHeight > maxHeight {
-                fontSize = 17 * min(maxWidth / maxWordWidth, maxHeight / totalHeight) * 0.95
-            } else {
-                fontSize = 17
-            }
-        } else {
-            // Single word
-            let size = (word.text as NSString).size(withAttributes: [.font: testFont])
-            if size.width > maxWidth || size.height > maxHeight {
-                fontSize = 17 * min(maxWidth / size.width, maxHeight / size.height) * 0.95
-            } else {
-                fontSize = 17
-            }
+            fontSize = adjustFontSize(for: word.text, in: CGSize(width: size, height: size))
         }
     }
 }
