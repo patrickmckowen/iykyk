@@ -6,8 +6,15 @@
 //
 
 import Foundation
+import SwiftData
 
-struct Word: Identifiable, Equatable {
-    let id = UUID()
+@Model
+final class Word {
+    var id: UUID
     var text: String
+
+    init(id: UUID = UUID(), text: String) {
+        self.id = id
+        self.text = text
+    }
 }

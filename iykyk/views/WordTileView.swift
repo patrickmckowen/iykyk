@@ -24,7 +24,7 @@ struct WordTileView: View {
                     .focused($isFocused)
                     .autocorrectionDisabled(true)
                     .foregroundColor(.primary)
-                    .onChange(of: internalWord) { newValue in
+                    .onChange(of: internalWord) { _, newValue in
                         let limitedWord = limitToTwoWords(newValue)
                         if limitedWord != newValue {
                             internalWord = limitedWord

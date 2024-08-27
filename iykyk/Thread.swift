@@ -6,9 +6,29 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 
-enum Difficulty: Int, CaseIterable {
+@Model
+final class Thread {
+    var id: UUID
+    var name: String
+    var words: [Word]
+    var difficulty: Difficulty
+
+    var color: Color {
+        difficulty.color
+    }
+
+    init(id: UUID = UUID(), name: String, words: [Word], difficulty: Difficulty) {
+        self.id = id
+        self.name = name
+        self.words = words
+        self.difficulty = difficulty
+    }
+}
+
+enum Difficulty: Int, CaseIterable, Codable {
     case easy = 1
     case medium = 2
     case hard = 3
@@ -21,16 +41,5 @@ enum Difficulty: Int, CaseIterable {
         case .hard: return .blue
         case .expert: return .purple
         }
-    }
-}
-
-struct Thread: Identifiable {
-    let id = UUID()
-    var name: String
-    var words: [Word]
-    var difficulty: Difficulty
-
-    var color: Color {
-        difficulty.color
     }
 }

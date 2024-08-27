@@ -3,33 +3,27 @@ import UIKit
 
 struct GamePreviewView: View {
     let game: Game
-    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 20) {
                 GameBoardView(game: game, screenWidth: geometry.size.width)
+
+                Button(action: {
+                    // TODO: Implement share functionality
+                    print("Share button tapped")
+                }) {
+                    Text("Share")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
             }
             .padding(4)
-        }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Edit") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-            }
-            ToolbarItem(placement: .principal) {
-                Text("Preview")
-                    .font(.headline)
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Finish") {
-                    // TODO: Implement create game functionality
-                    print("Create Game button tapped")
-                }
-            }
         }
     }
 }
@@ -81,8 +75,6 @@ struct GameTileView: View {
 
 struct GamePreviewView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
-            GamePreviewView(game: Game())
-        }
+        GamePreviewView(game: Game())
     }
 }
