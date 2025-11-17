@@ -2,8 +2,9 @@
 
 ## 1. Overall Mental Model
 
-* The **4×4 grid (“board view”) is home base** for creation and later gameplay.
+* The **4×4 grid ("board view") is home base** for creation and later gameplay.
 * Users always start by seeing all **16 word tiles** arranged in 4 horizontal rows.
+  * Note: A new puzzle initializes with the full 4×4 structure (4 groups × 4 words) even though tiles start empty. This allows the board to render immediately.
 * Each **row represents a category** (group) but **category names are not shown** in the board view to mimic the player experience.
 * Creation feels like **designing a board**, not filling out a form.
 
@@ -13,6 +14,7 @@
 
   * 4×4 grid of tiles, all visible at once.
   * Tiles are grouped into **4 horizontal rows**.
+  * Each row corresponds to one `PuzzleGroup` (positions 0-3 from top to bottom).
 * Visual grouping:
 
   * Each row has a **subtle container background** or tint to imply grouping.
@@ -21,6 +23,8 @@
 
   * Keeps the board visually clean.
   * Reinforces the idea that the creator is seeing roughly what the player will see.
+
+**Technical Note:** The data model includes explicit `position` fields on both `PuzzleGroup` (for row ordering) and `PuzzleWord` (for word ordering within groups). This ensures stable, predictable positioning throughout the creation experience and across app restarts.
 
 ## 3. Category-Level Editing (Zoomed State)
 

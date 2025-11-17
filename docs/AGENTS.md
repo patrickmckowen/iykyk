@@ -121,16 +121,20 @@ We model a single iykyk puzzle with a hard 4×4 constraint.
 **PuzzleGroup**
 - `id: UUID`
 - `title: String` – category name players are meant to infer.
+- `position: Int` – row position (0-3) for stable ordering in creation UI.
 - `words: [PuzzleWord]`
 
 **PuzzleWord**
 - `id: UUID`
 - `text: String`
+- `position: Int` – position within group (0-3) for stable ordering.
 
-**WordTile** (UI-only for the player grid)
+**WordTile** (UI-only for the player grid during gameplay)
 - `id: UUID`
 - `text: String`
 - `groupID: UUID` – reference back to `PuzzleGroup`.
+
+**Note:** `WordTile` is used exclusively for the play experience where words are shuffled and displayed in random order. The creation UI works directly with `Puzzle` → `PuzzleGroup` → `PuzzleWord` relationships, preserving the group structure and ordering.
 
 ### 7.2 Constraints & Validation
 
@@ -139,7 +143,9 @@ We model a single iykyk puzzle with a hard 4×4 constraint.
 
 **Example validation responsibilities:**
 - Check group count == 4.
-- Check each group has 4 words.
+- Check each group has exactly 4 words.
+- Check group positions are 0-3 (unique and complete).
+- Check word positions within each group are 0-3 (unique and complete).
 - Check no duplicate word text within a puzzle (optional, but helpful).
 - Provide a list of issues to the UI (not just a boolean).
 
@@ -179,9 +185,11 @@ Goal: We should be able to swap repositories easily in previews via dependency i
 ### 8.3 Fixtures & Sample Data
 
 Create simple fixtures to bootstrap previews and manual testing:
-- `sampleEmptyPuzzle()` – metadata only, no groups/words.
-- `samplePartialPuzzle()` – some groups/words filled.
-- `sampleCompletedPuzzle()` – fully valid 4×4 puzzle.
+- `sampleEmptyPuzzle()` – A new puzzle ready for creation. Contains 4 `PuzzleGroup` instances (positions 0-3, empty titles) each with 4 `PuzzleWord` instances (positions 0-3, empty text). This structure allows the creation UI to render a 4×4 grid immediately while still being functionally "blank."
+- `samplePartialPuzzle()` – Some groups/words have content filled in, others remain empty.
+- `sampleCompletedPuzzle()` – Fully valid 4×4 puzzle with all groups and words populated.
+
+**Note on initialization:** When creating a new puzzle for the creation UI, always initialize with the full 4×4 structure (4 groups × 4 words) rather than starting with zero groups. This matches the UX expectation that users see a complete board from the start.
 
 ---
 ## 9. Project & Folder Structure
