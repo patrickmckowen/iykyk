@@ -20,6 +20,11 @@ The twist: **puzzles are made by people you know**, so themes can be inside joke
    - 4 categories (groups) with a title each
    - 4 words per category
 
+2. **Style** - User previews how the puzzle will appear to the player and can select from different design templates and customize the individual styles:
+   - Wallpaper (image, emoji wallpaper, color, gradient)
+   - WordTile (glass, retro 3D, classic, etc)
+   - WordTile text (font family and color)
+
 2. **Share** – The puzzle is shared with specific people (eventual goal is links / in-app social graph; early versions may be app-only).
 
 3. **Play** – Recipients solve the puzzle using familiar Connections mechanics:
@@ -36,11 +41,10 @@ For the **current phase**, we are focused almost entirely on the **Create** part
 
 ### 4.1 Phase Goals
 
-- **Primary goal:** Provide a minimal yet robust foundation for experimenting with multiple puzzle-creation UX flows for a fixed 4×4 iykyk puzzle.
+- **Primary goal:** Provide a minimal yet robust foundation for building the puzzle creation UX for a fixed 4×4 iykyk puzzle.
 - **In scope for this phase:**
   - Local-only data model for a single puzzle (4 groups × 4 words).
   - Local persistence so puzzles survive app restarts.
-  - A clear, modular folder structure to host multiple creation UI variants.
   - SwiftUI previews for fast visual iteration.
 
 ### 4.2 Scope for Current Phase
@@ -50,11 +54,11 @@ For the **current phase**, we are focused almost entirely on the **Create** part
 - Building a **minimal iOS SwiftUI app** targeting iOS 26 (latest iOS SDK in Xcode).
 - Implementing a **4×4 puzzle data model** (4 groups × 4 words).
 - Implementing **local-only persistence** (SwiftData) so puzzles survive restarts.
-- Designing the project structure to support **multiple creation UX variants**.
-- Prototyping the interaction design of puzzle creation.
+- Implementing the **puzzle creationg flow** (see /docs/CREATE.md).
 
 #### Out of Scope (for now)
 
+- Customizing the puzzle styles
 - Social graph, friend system, invites, and discovery.
 - Cloud sync / multi-device accounts.
 - Game meta systems (streaks, leaderboards, timers).
@@ -78,11 +82,6 @@ For the **current phase**, we are focused almost entirely on the **Create** part
   - Core models (`Puzzle`, `PuzzleGroup`, `PuzzleWord`) in a `Core` module.
   - Repository pattern (`PuzzleRepository`) with an in-memory implementation for previews and a SwiftData implementation for runtime.
   - Features organized by domain (e.g. `Features/PuzzleCreation`, `Features/PuzzleLibrary`).
-  - Creation flow supports multiple **variants** living side-by-side so beta testers can compare different designs.
-
-- **Design System:** Light, but intentional:
-  - Shared typography & color tokens.
-  - Reusable components (buttons, tiles) that match the visual identity.
 
 - **Tooling & runtime:**
   - Target latest iOS SDK in Xcode (our stand-in for "iOS 26").
@@ -113,8 +112,7 @@ We model a single iykyk puzzle with a hard 4×4 constraint.
 **Puzzle**
 - `id: UUID`
 - `title: String` – human-readable name (e.g. "Hood River Trip").
-- `hint: String?` – short theme hint.
-- `creatorName: String?` – free-text for now.
+- `creatorName: String?` – automatically populated from the logged-in user’s display name.
 - `createdAt: Date`
 - `groups: [PuzzleGroup]`
 
@@ -194,7 +192,7 @@ Create simple fixtures to bootstrap previews and manual testing:
 ---
 ## 9. Project & Folder Structure
 
-Design the project so multiple creation UIs can coexist and be compared.
+Design the project with a **single primary creation UI** to keep scope tight and complexity low, while leaving room to evolve in future iterations if needed.
 
 ### 9.1 Proposed Top-Level Layout
 
@@ -219,24 +217,14 @@ iykyk/
       PuzzleFixtures.swift
   Features/
     PuzzleCreation/
-      Shared/
-        ViewModels/
-          PuzzleCreationViewModel.swift
-        Views/
-          Common/
-            CategoryEditorView.swift
-            WordListEditorView.swift
-            PuzzleSummaryView.swift
-      Variants/
-        LinearForm/
-          LinearCreationView.swift
-          LinearCreationView_Previews.swift
-        GridFirst/
-          GridCreationView.swift
-          GridCreationView_Previews.swift
-        CardStack/
-          CardStackCreationView.swift
-          CardStackCreationView_Previews.swift
+      ViewModels/
+        PuzzleCreationViewModel.swift
+      Views/
+        CreationView.swift
+        CreationView_Previews.swift
+        CategoryEditorView.swift
+        WordListEditorView.swift
+        PuzzleSummaryView.swift
     PuzzlePlay/
       (Stub or minimal implementation)
     PuzzleLibrary/
@@ -252,17 +240,12 @@ iykyk/
     PreviewRepositories.swift
 ```
 
-Notes for agents:
-- **Do not** over-abstract early. It’s OK if this evolves.
-- Prioritize clarity and isolation of each creation variant under `Variants/`.
-- Shared subviews and view models go under `Shared/`.
-
 ---
 ## 10. SwiftUI Preview Strategy
 
 Previews are central to this phase.
 
-1. Every major creation view (e.g. `LinearCreationView`, `GridCreationView`, `CardStackCreationView`) must have a `PreviewProvider`.
+1. The primary creation view (`CreationView`) must have a `PreviewProvider`.
 2. Previews must:
    - Use `InMemoryPuzzleRepository` or fixture instances.
    - Simulate at least three states where applicable:
@@ -271,7 +254,7 @@ Previews are central to this phase.
      - **Completed** – 4×4 valid puzzle.
 3. Consider using preview helpers in `PreviewSupport` to keep preview code DRY.
 
-Goal: We should be able to open Xcode’s preview canvas and visually compare different creation flows without running the full app.
+Goal: We should be able to open Xcode’s preview canvas and iterate quickly on the creation flow without running the full app.
 
 ---
 ## 11. Minimal App Shell
@@ -281,11 +264,11 @@ Even though previews are primary, we still need a thin shell for running on devi
 **App entry flow suggestions:**
 - Simple root view with:
   - A button to open **Puzzle Library** (list of saved puzzles).
-  - A button to create a new puzzle using a **default creation variant**.
+  - A button to create a new puzzle using the **default creation flow**.
 
 **`PuzzleLibraryView` responsibilities:**
 - Display all puzzles from `PuzzleRepository`.
-- Tap to edit an existing puzzle via the default creation variant.
+- Tap to edit an existing puzzle via the creation flow.
 - Optionally, allow deletion for cleanup.
 
 Keep navigation minimal and avoid over-engineering router patterns at this stage.
@@ -293,7 +276,7 @@ Keep navigation minimal and avoid over-engineering router patterns at this stage
 ---
 ## 12. Gameplay Rules
 
-This section defines the minimal gameplay contract required for building consistent previews and interactions across all creation UX variants.
+This section defines the minimal gameplay contract required for building consistent previews and interactions across the creation UX.
 
 ### 12.1 Puzzle Structure
 
@@ -318,6 +301,7 @@ This section defines the minimal gameplay contract required for building consist
 
 **Correct guess**
 - The group is “solved.”
+- The tiles have some fun animation.
 - Those 4 tiles are visually marked and removed or locked from future interaction.
 
 **Incorrect guess**
