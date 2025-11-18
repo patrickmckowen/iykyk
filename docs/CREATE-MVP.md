@@ -306,6 +306,35 @@ VStack(spacing: 0) {
 - SwiftUI's automatic content sizing and keyboard avoidance handles everything
 - No `GeometryReader` or custom calculations required
 
+### 10.6 Word Editing & Tile Typography
+
+This MVP uses a consistent, predictable typography system for word tiles that keeps puzzles legible while allowing short phrases:
+- Default font size: **14pt**
+- Minimum font size: **12pt**
+- Tiles support up to **2 lines** of text
+- Long single words shrink in place as they approach tile bounds
+- Multi-word phrases wrap to a second line (max 2) and then shrink if needed
+- Overflow beyond 2 lines is clipped (no ellipsis) to preserve the grid look
+- Dynamic Type scaling is **not** used for tiles; typography is fixed for game consistency
+
+**Implementation approach (per tile):**
+- Each editable word tile is backed by a SwiftUI `TextField` configured for vertical axis:
+  - `TextField("", text: $text, axis: .vertical)`
+  - `.lineLimit(2)`
+  - `.fixedSize(horizontal: false, vertical: true)`
+- The visible `TextField`:
+  - Uses `.textFieldStyle(.plain)` and tile chrome (padding, background, rounded corners) so it looks like a static tile
+  - Applies `.font(.system(size: fontSize))` where `fontSize` is managed per tile
+- A hidden mirror `Text` is used to measure rendered size and keep `fontSize` within bounds:
+  - `Text(text)` with the same font and `lineLimit(2)`, wrapped in a `GeometryReader`
+  - Size is reported via a `PreferenceKey` (e.g., `TextSizePreferenceKey`)
+  - On preference change, the tile recomputes `fontSize` to keep text within the tile’s width/height, clamped to the 12–14pt range
+- `fontSize` changes are animated with a light `.easeInOut` to avoid jarring jumps
+- The tile view clips its content so any residual overflow is hidden
+- Optional: strip explicit newline characters in `onChange(of: text)` to avoid users forcing more than 2 lines
+
+This keeps the creation and preview experiences aligned: creators edit directly in the same tile that will be shown to solvers, and typography behavior is consistent across both.
+
 ---
 
 ## 11. Success Criteria for MVP
