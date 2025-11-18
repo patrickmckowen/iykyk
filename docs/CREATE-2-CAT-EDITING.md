@@ -1,4 +1,4 @@
-# iykyk – Puzzle Creation UX
+# Create UX Option 2 - Category-level Editing
 
 ## 1. Overall Mental Model
 
