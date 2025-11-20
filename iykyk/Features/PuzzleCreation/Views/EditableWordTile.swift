@@ -19,6 +19,7 @@ struct EditableWordTile: View {
     private let minFontSize: CGFloat = 10
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
+    private let textHorizontalBuffer: CGFloat = 10
     private let cornerRadius: CGFloat = 8
     
     var body: some View {
@@ -70,7 +71,7 @@ struct EditableWordTile: View {
     }
     
     private func updateFontSize(availableSize: CGSize) {
-        let width = availableSize.width - (tilePadding * 2)
+        let width = availableSize.width - (tilePadding * 2) - textHorizontalBuffer
         let height = availableSize.height - (tilePadding * 2)
         
         guard width > 0 && height > 0 else { return }
