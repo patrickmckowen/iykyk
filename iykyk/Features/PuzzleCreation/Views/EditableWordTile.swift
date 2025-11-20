@@ -19,6 +19,7 @@ struct EditableWordTile: View {
     private let minFontSize: CGFloat = 10
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
+    private let textHorizontalBuffer: CGFloat = 10
     private let cornerRadius: CGFloat = 8
     
     var body: some View {
@@ -47,10 +48,10 @@ struct EditableWordTile: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.characters)
                     .onChange(of: text) { oldValue, newValue in
-                        // Strip explicit newlines to prevent forcing >2 lines
-                        let sanitized = newValue.replacingOccurrences(of: "\n", with: " ")
-                        if sanitized != newValue {
-                            text = sanitized
+                        // If user added a newline (pressed done/return), dismiss keyboard
+                        if newValue.contains("\n") {
+                            text = newValue.replacingOccurrences(of: "\n", with: "")
+                            focusedField = nil
                         }
                         updateFontSize(availableSize: geometry.size)
                     }
@@ -60,19 +61,28 @@ struct EditableWordTile: View {
                     .onAppear {
                         updateFontSize(availableSize: geometry.size)
                     }
+                    .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
+                    .onTapGesture {
+                        focusedField = fieldID
+                    }
             }
         }
         .aspectRatio(1, contentMode: .fit)
     }
     
     private func updateFontSize(availableSize: CGSize) {
-        let width = availableSize.width - (tilePadding * 2)
+        let width = availableSize.width - (tilePadding * 2) - textHorizontalBuffer
         let height = availableSize.height - (tilePadding * 2)
         
         guard width > 0 && height > 0 else { return }
         
         if text.isEmpty {
             fontSize = 14 // Default size for placeholder
+            return
+        }
+        
+        if text.containsOnlyEmoji {
+            fontSize = 22
             return
         }
         
@@ -162,6 +172,32 @@ struct EditableWordTile: View {
 
 #Preview("Very Long Phrase") { @MainActor in
     @Previewable @State var text = "REALLY LONG PHRASE THAT SHOULD SHRINK"
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+    
+    EditableWordTile(
+        text: $text,
+        focusedField: $focusedField,
+        fieldID: .word(groupIndex: 0, wordIndex: 0)
+    )
+    .frame(width: 100)
+    .padding()
+}
+
+#Preview("Single Emoji") { @MainActor in
+    @Previewable @State var text = "😄"
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+    
+    EditableWordTile(
+        text: $text,
+        focusedField: $focusedField,
+        fieldID: .word(groupIndex: 0, wordIndex: 0)
+    )
+    .frame(width: 100)
+    .padding()
+}
+
+#Preview("Multiple Emojis") { @MainActor in
+    @Previewable @State var text = "😄😎🎉"
     @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
