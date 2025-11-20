@@ -47,10 +47,10 @@ struct EditableWordTile: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.characters)
                     .onChange(of: text) { oldValue, newValue in
-                        // Strip explicit newlines to prevent forcing >2 lines
-                        let sanitized = newValue.replacingOccurrences(of: "\n", with: " ")
-                        if sanitized != newValue {
-                            text = sanitized
+                        // If user added a newline (pressed done/return), dismiss keyboard
+                        if newValue.contains("\n") {
+                            text = newValue.replacingOccurrences(of: "\n", with: "")
+                            focusedField = nil
                         }
                         updateFontSize(availableSize: geometry.size)
                     }
