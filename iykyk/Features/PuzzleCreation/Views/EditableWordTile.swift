@@ -60,6 +60,10 @@ struct EditableWordTile: View {
                     .onAppear {
                         updateFontSize(availableSize: geometry.size)
                     }
+                    .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
+                    .onTapGesture {
+                        focusedField = fieldID
+                    }
             }
         }
         .aspectRatio(1, contentMode: .fit)
