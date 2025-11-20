@@ -8,7 +8,6 @@
 import SwiftUI
 
 enum PuzzleCreationFocusField: Hashable, Sendable {
-    case title
     case word(groupIndex: Int, wordIndex: Int)
 }
 
@@ -22,16 +21,6 @@ struct PuzzleCreationView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Fixed-height title field
-            TextField("Puzzle Title", text: $puzzle.title)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
-                .padding()
-                .focused($focusedField, equals: .title)
-                .submitLabel(.done)
-                .onSubmit { focusedField = nil }
-            
             // Flexible scrollable content
             ScrollView {
                 VStack(spacing: 16) {
@@ -72,7 +61,7 @@ struct PuzzleCreationView: View {
                 Button(action: moveToPreviousField) {
                     Image(systemName: "chevron.up")
                 }
-                .disabled(focusedField == nil || focusedField == .title)
+                .disabled(focusedField == nil || (focusedField == .word(groupIndex: 0, wordIndex: 0)))
                 
                 Button(action: moveToNextField) {
                     Image(systemName: "chevron.down")
@@ -93,28 +82,23 @@ struct PuzzleCreationView: View {
         guard let current = focusedField else { return }
         
         switch current {
-        case .title:
-            break // Should be disabled
         case .word(let g, let w):
             if w > 0 {
                 focusedField = .word(groupIndex: g, wordIndex: w - 1)
             } else if g > 0 {
                 focusedField = .word(groupIndex: g - 1, wordIndex: 3)
-            } else {
-                focusedField = .title
             }
+            // If at first field (0, 0), do nothing
         }
     }
     
     private func moveToNextField() {
         guard let current = focusedField else {
-            focusedField = .title
+            focusedField = .word(groupIndex: 0, wordIndex: 0)
             return
         }
         
         switch current {
-        case .title:
-            focusedField = .word(groupIndex: 0, wordIndex: 0)
         case .word(let g, let w):
             if w < 3 {
                 focusedField = .word(groupIndex: g, wordIndex: w + 1)
