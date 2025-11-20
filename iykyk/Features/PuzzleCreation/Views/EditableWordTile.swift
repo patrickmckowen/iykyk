@@ -81,6 +81,11 @@ struct EditableWordTile: View {
             return
         }
         
+        if text.containsOnlyEmoji {
+            fontSize = 22
+            return
+        }
+        
         // Find best fit
         for size in stride(from: maxFontSize, through: minFontSize, by: -1) {
             let font = UIFont.systemFont(ofSize: size, weight: .bold)
@@ -167,6 +172,32 @@ struct EditableWordTile: View {
 
 #Preview("Very Long Phrase") { @MainActor in
     @Previewable @State var text = "REALLY LONG PHRASE THAT SHOULD SHRINK"
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+    
+    EditableWordTile(
+        text: $text,
+        focusedField: $focusedField,
+        fieldID: .word(groupIndex: 0, wordIndex: 0)
+    )
+    .frame(width: 100)
+    .padding()
+}
+
+#Preview("Single Emoji") { @MainActor in
+    @Previewable @State var text = "😄"
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+    
+    EditableWordTile(
+        text: $text,
+        focusedField: $focusedField,
+        fieldID: .word(groupIndex: 0, wordIndex: 0)
+    )
+    .frame(width: 100)
+    .padding()
+}
+
+#Preview("Multiple Emojis") { @MainActor in
+    @Previewable @State var text = "😄😎🎉"
     @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
