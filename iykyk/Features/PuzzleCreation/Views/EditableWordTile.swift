@@ -6,108 +6,101 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct EditableWordTile: View {
     @Binding var text: String
     @FocusState.Binding var focusedField: PuzzleCreationView.FocusField?
     let fieldID: PuzzleCreationView.FocusField
     
-    @State private var fontSize: CGFloat = 14
-    @State private var measuredSize: CGSize = .zero
+    @State private var fontSize: CGFloat = 16
     
     // Visual constants
-    private let minFontSize: CGFloat = 12
-    private let maxFontSize: CGFloat = 14
-    private let tileHeight: CGFloat = 52
-    private let tilePadding: CGFloat = 8
+    private let minFontSize: CGFloat = 8
+    private let maxFontSize: CGFloat = 24
+    private let tilePadding: CGFloat = 4
     private let cornerRadius: CGFloat = 8
     
     var body: some View {
-        ZStack {
-            // Hidden text for measurement
-            Text(text.isEmpty ? "WORD" : text)
-                .font(.system(size: fontSize, weight: .medium))
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(
-                            key: TextSizePreferenceKey.self,
-                            value: geometry.size
-                        )
+        GeometryReader { geometry in
+            ZStack {
+                TextField("WORD", text: $text, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: fontSize, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .padding(tilePadding)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .background(Color(.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .strokeBorder(
+                                focusedField == fieldID ? Color.accentColor : Color(.systemGray4),
+                                lineWidth: focusedField == fieldID ? 2 : 1
+                            )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+                    .focused($focusedField, equals: fieldID)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.characters)
+                    .onChange(of: text) { oldValue, newValue in
+                        // Strip explicit newlines to prevent forcing >2 lines
+                        let sanitized = newValue.replacingOccurrences(of: "\n", with: " ")
+                        if sanitized != newValue {
+                            text = sanitized
+                        }
+                        updateFontSize(availableSize: geometry.size)
                     }
-                )
-                .hidden()
-            
-            // Visible TextField
-            TextField("WORD", text: $text, axis: .vertical)
-                .textFieldStyle(.plain)
-                .font(.system(size: fontSize, weight: .medium))
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, maxHeight: tileHeight)
-                .padding(.horizontal, tilePadding)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(Color(.systemBackground))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(
-                            focusedField == fieldID ? Color.accentColor : Color(.systemGray4),
-                            lineWidth: focusedField == fieldID ? 2 : 1
-                        )
-                )
-                .focused($focusedField, equals: fieldID)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.characters)
-        }
-        .frame(height: tileHeight)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-        .onPreferenceChange(TextSizePreferenceKey.self) { size in
-            measuredSize = size
-            adjustFontSize()
-        }
-        .onChange(of: text) { oldValue, newValue in
-            // Strip explicit newlines to prevent forcing >2 lines
-            let sanitized = newValue.replacingOccurrences(of: "\n", with: " ")
-            if sanitized != newValue {
-                text = sanitized
+                    .onChange(of: geometry.size) { _, newSize in
+                        updateFontSize(availableSize: newSize)
+                    }
+                    .onAppear {
+                        updateFontSize(availableSize: geometry.size)
+                    }
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: fontSize)
+        .aspectRatio(1, contentMode: .fit)
     }
     
-    private func adjustFontSize() {
-        let availableWidth = UIScreen.main.bounds.width / 4 - tilePadding * 3 // rough estimate
-        let availableHeight = tileHeight - 12
+    private func updateFontSize(availableSize: CGSize) {
+        let width = availableSize.width - (tilePadding * 2)
+        let height = availableSize.height - (tilePadding * 2)
         
-        // If text is empty, reset to max
-        guard !text.isEmpty else {
-            fontSize = maxFontSize
+        guard width > 0 && height > 0 else { return }
+        
+        if text.isEmpty {
+            fontSize = 14 // Default size for placeholder
             return
         }
         
-        // Check if text exceeds bounds
-        let exceedsWidth = measuredSize.width > availableWidth - tilePadding * 2
-        let exceedsHeight = measuredSize.height > availableHeight
-        
-        if exceedsWidth || exceedsHeight {
-            // Shrink font toward minimum
-            let newSize = max(minFontSize, fontSize - 0.5)
-            if newSize != fontSize {
-                fontSize = newSize
+        // Find best fit
+        for size in stride(from: maxFontSize, through: minFontSize, by: -1) {
+            let font = UIFont.systemFont(ofSize: size, weight: .bold)
+            
+            // 1. Check if any single word exceeds width
+            let words = text.split(separator: " ")
+            let maxWordWidth = words.map { word -> CGFloat in
+                let attrString = NSAttributedString(string: String(word), attributes: [.font: font])
+                return attrString.size().width
+            }.max() ?? 0
+            
+            if maxWordWidth > width {
+                continue
             }
-        } else if measuredSize.width < availableWidth * 0.7 && measuredSize.height < availableHeight * 0.7 {
-            // Text fits comfortably, try to grow back toward maximum
-            let newSize = min(maxFontSize, fontSize + 0.5)
-            if newSize != fontSize {
-                fontSize = newSize
+            
+            // 2. Check total bounds
+            let constraintRect = CGSize(width: width, height: .greatestFiniteMagnitude)
+            let attrString = NSAttributedString(string: text, attributes: [.font: font])
+            let boundingBox = attrString.boundingRect(with: constraintRect,
+                                                    options: .usesLineFragmentOrigin,
+                                                    context: nil)
+            
+            if boundingBox.height <= height {
+                fontSize = size
+                return
             }
         }
+        
+        fontSize = minFontSize
     }
 }
 
@@ -120,6 +113,7 @@ struct EditableWordTile: View {
         focusedField: $focusedField,
         fieldID: .word(groupIndex: 0, wordIndex: 0)
     )
+    .frame(width: 100)
     .padding()
 }
 
@@ -132,6 +126,7 @@ struct EditableWordTile: View {
         focusedField: $focusedField,
         fieldID: .word(groupIndex: 0, wordIndex: 0)
     )
+    .frame(width: 100)
     .padding()
 }
 
@@ -144,6 +139,7 @@ struct EditableWordTile: View {
         focusedField: $focusedField,
         fieldID: .word(groupIndex: 0, wordIndex: 0)
     )
+    .frame(width: 100)
     .padding()
 }
 
@@ -156,6 +152,7 @@ struct EditableWordTile: View {
         focusedField: $focusedField,
         fieldID: .word(groupIndex: 0, wordIndex: 0)
     )
+    .frame(width: 100)
     .padding()
 }
 
@@ -168,6 +165,6 @@ struct EditableWordTile: View {
         focusedField: $focusedField,
         fieldID: .word(groupIndex: 0, wordIndex: 0)
     )
+    .frame(width: 100)
     .padding()
 }
-

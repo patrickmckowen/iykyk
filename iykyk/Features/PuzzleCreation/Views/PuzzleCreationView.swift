@@ -46,41 +46,17 @@ struct PuzzleCreationView: View {
             .scrollDismissesKeyboard(.interactively)
             
             Spacer()
-            
-            // Fixed-height actions
-            BottomActionsView()
         }
         .frame(maxHeight: .infinity)
         .navigationTitle("New Puzzle")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Next") {
                     // Action placeholder
                 }
             }
         }
-    }
-}
-
-struct BottomActionsView: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            Button("Save Draft") {
-                // Action placeholder
-            }
-            .buttonStyle(.bordered)
-            .frame(maxWidth: .infinity)
-            
-            Button("Preview") {
-                // Action placeholder
-            }
-            .buttonStyle(.borderedProminent)
-            .frame(maxWidth: .infinity)
-            .disabled(true) // Disabled for prototype
-        }
-        .padding()
-        .background(Color(.systemBackground))
     }
 }
 
