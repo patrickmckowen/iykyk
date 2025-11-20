@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CategoryRowView: View {
     @Bindable var group: PuzzleGroup
-    @FocusState.Binding var focusedField: PuzzleCreationView.FocusField?
+    @FocusState.Binding var focusedField: PuzzleCreationFocusField?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -44,8 +44,8 @@ struct CategoryRowView: View {
     }
 }
 
-#Preview("Empty Group") {
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+#Preview("Empty Group") { @MainActor in
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     let words = (0...3).map { PuzzleWord(text: "", position: $0) }
     let group = PuzzleGroup(title: "", position: 0, words: words)
@@ -57,8 +57,8 @@ struct CategoryRowView: View {
     .padding()
 }
 
-#Preview("Filled Group") {
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+#Preview("Filled Group") { @MainActor in
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     let words = [
         PuzzleWord(text: "LATTE", position: 0),
@@ -75,8 +75,8 @@ struct CategoryRowView: View {
     .padding()
 }
 
-#Preview("Mixed Content") {
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+#Preview("Mixed Content") { @MainActor in
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     let words = [
         PuzzleWord(text: "PYTHON", position: 0),
@@ -92,4 +92,3 @@ struct CategoryRowView: View {
     )
     .padding()
 }
-

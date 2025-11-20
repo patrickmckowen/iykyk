@@ -7,14 +7,14 @@
 
 import SwiftUI
 
+enum PuzzleCreationFocusField: Hashable {
+    case title
+    case word(groupIndex: Int, wordIndex: Int)
+}
+
 struct PuzzleCreationView: View {
     @State private var puzzle: Puzzle
-    @FocusState private var focusedField: FocusField?
-    
-    enum FocusField: Hashable {
-        case title
-        case word(groupIndex: Int, wordIndex: Int)
-    }
+    @FocusState private var focusedField: PuzzleCreationFocusField?
     
     init(puzzle: Puzzle? = nil) {
         _puzzle = State(initialValue: puzzle ?? PuzzleFixtures.sampleEmptyPuzzle())

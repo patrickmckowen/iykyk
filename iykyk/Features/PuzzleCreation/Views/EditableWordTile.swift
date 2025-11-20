@@ -10,8 +10,8 @@ import UIKit
 
 struct EditableWordTile: View {
     @Binding var text: String
-    @FocusState.Binding var focusedField: PuzzleCreationView.FocusField?
-    let fieldID: PuzzleCreationView.FocusField
+    @FocusState.Binding var focusedField: PuzzleCreationFocusField?
+    let fieldID: PuzzleCreationFocusField
     
     @State private var fontSize: CGFloat = 16
     
@@ -108,9 +108,9 @@ struct EditableWordTile: View {
     }
 }
 
-#Preview("Empty Tile") {
+#Preview("Empty Tile") { @MainActor in
     @Previewable @State var text = ""
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
         text: $text,
@@ -121,9 +121,9 @@ struct EditableWordTile: View {
     .padding()
 }
 
-#Preview("Short Word") {
+#Preview("Short Word") { @MainActor in
     @Previewable @State var text = "GO"
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
         text: $text,
@@ -134,9 +134,9 @@ struct EditableWordTile: View {
     .padding()
 }
 
-#Preview("Long Single Word") {
+#Preview("Long Single Word") { @MainActor in
     @Previewable @State var text = "CAPPUCCINO"
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
         text: $text,
@@ -147,9 +147,9 @@ struct EditableWordTile: View {
     .padding()
 }
 
-#Preview("Multi-word Phrase") {
+#Preview("Multi-word Phrase") { @MainActor in
     @Previewable @State var text = "SPELLING BEE"
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
         text: $text,
@@ -160,9 +160,9 @@ struct EditableWordTile: View {
     .padding()
 }
 
-#Preview("Very Long Phrase") {
+#Preview("Very Long Phrase") { @MainActor in
     @Previewable @State var text = "REALLY LONG PHRASE THAT SHOULD SHRINK"
-    @Previewable @FocusState var focusedField: PuzzleCreationView.FocusField?
+    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
     
     EditableWordTile(
         text: $text,
