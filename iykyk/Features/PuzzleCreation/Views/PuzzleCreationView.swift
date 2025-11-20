@@ -29,6 +29,8 @@ struct PuzzleCreationView: View {
                 .multilineTextAlignment(.center)
                 .padding()
                 .focused($focusedField, equals: .title)
+                .submitLabel(.done)
+                .onSubmit { focusedField = nil }
             
             // Flexible scrollable content
             ScrollView {
@@ -48,6 +50,13 @@ struct PuzzleCreationView: View {
             Spacer()
         }
         .frame(maxHeight: .infinity)
+        .background(
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    focusedField = nil
+                }
+        )
         .navigationTitle("New Puzzle")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -56,6 +65,63 @@ struct PuzzleCreationView: View {
                     // Action placeholder
                 }
             }
+            
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                
+                Button(action: moveToPreviousField) {
+                    Image(systemName: "chevron.up")
+                }
+                .disabled(focusedField == nil || focusedField == .title)
+                
+                Button(action: moveToNextField) {
+                    Image(systemName: "chevron.down")
+                }
+                .disabled(isLastField)
+            }
+        }
+    }
+    
+    private var isLastField: Bool {
+        if case .word(let g, let w) = focusedField {
+            return g == 3 && w == 3
+        }
+        return false
+    }
+    
+    private func moveToPreviousField() {
+        guard let current = focusedField else { return }
+        
+        switch current {
+        case .title:
+            break // Should be disabled
+        case .word(let g, let w):
+            if w > 0 {
+                focusedField = .word(groupIndex: g, wordIndex: w - 1)
+            } else if g > 0 {
+                focusedField = .word(groupIndex: g - 1, wordIndex: 3)
+            } else {
+                focusedField = .title
+            }
+        }
+    }
+    
+    private func moveToNextField() {
+        guard let current = focusedField else {
+            focusedField = .title
+            return
+        }
+        
+        switch current {
+        case .title:
+            focusedField = .word(groupIndex: 0, wordIndex: 0)
+        case .word(let g, let w):
+            if w < 3 {
+                focusedField = .word(groupIndex: g, wordIndex: w + 1)
+            } else if g < 3 {
+                focusedField = .word(groupIndex: g + 1, wordIndex: 0)
+            }
+            // If last field, do nothing (button disabled)
         }
     }
 }
@@ -77,4 +143,3 @@ struct PuzzleCreationView: View {
         PuzzleCreationView(puzzle: PuzzleFixtures.sampleCompletedPuzzle())
     }
 }
-

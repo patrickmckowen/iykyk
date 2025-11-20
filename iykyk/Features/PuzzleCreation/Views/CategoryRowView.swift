@@ -34,11 +34,6 @@ struct CategoryRowView: View {
                 }
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6).opacity(0.5))
-        )
     }
     
     private var categoryLabel: String {

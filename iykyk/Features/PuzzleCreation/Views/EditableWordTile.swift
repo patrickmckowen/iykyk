@@ -16,8 +16,8 @@ struct EditableWordTile: View {
     @State private var fontSize: CGFloat = 16
     
     // Visual constants
-    private let minFontSize: CGFloat = 8
-    private let maxFontSize: CGFloat = 24
+    private let minFontSize: CGFloat = 10
+    private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
     private let cornerRadius: CGFloat = 8
     
@@ -40,6 +40,10 @@ struct EditableWordTile: View {
                     )
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
                     .focused($focusedField, equals: fieldID)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        focusedField = nil
+                    }
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.characters)
                     .onChange(of: text) { oldValue, newValue in
