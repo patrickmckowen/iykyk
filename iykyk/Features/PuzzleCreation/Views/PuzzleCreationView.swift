@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum PuzzleCreationFocusField: Hashable {
+enum PuzzleCreationFocusField: Hashable, Sendable {
     case title
     case word(groupIndex: Int, wordIndex: Int)
 }
