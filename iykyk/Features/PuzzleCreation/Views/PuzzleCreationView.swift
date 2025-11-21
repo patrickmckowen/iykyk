@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-enum PuzzleCreationFocusField: Hashable, Sendable {
+enum PuzzleCreationFocusField: Hashable {
+    case groupName(groupIndex: Int)
     case word(groupIndex: Int, wordIndex: Int)
 }
 
@@ -25,7 +26,7 @@ struct PuzzleCreationView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
-                        CategoryRowView(
+                        GroupRowView(
                             group: group,
                             focusedField: $focusedField
                         )
@@ -89,6 +90,9 @@ struct PuzzleCreationView: View {
                 focusedField = .word(groupIndex: g - 1, wordIndex: 3)
             }
             // If at first field (0, 0), do nothing
+        case .groupName(_):
+            // Group names are not part of keyboard navigation chain
+            break
         }
     }
     
@@ -106,6 +110,9 @@ struct PuzzleCreationView: View {
                 focusedField = .word(groupIndex: g + 1, wordIndex: 0)
             }
             // If last field, do nothing (button disabled)
+        case .groupName(_):
+            // Group names are not part of keyboard navigation chain
+            break
         }
     }
 }
