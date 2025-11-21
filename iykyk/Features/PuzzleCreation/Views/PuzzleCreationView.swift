@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 enum PuzzleCreationFocusField: Hashable {
     case groupName(groupIndex: Int)
@@ -13,11 +14,24 @@ enum PuzzleCreationFocusField: Hashable {
 }
 
 struct PuzzleCreationView: View {
-    @State private var puzzle: Puzzle
+    @Bindable var puzzle: Puzzle
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: PuzzleCreationFocusField?
     
+    private let isNewPuzzle: Bool
+    @State private var hasBeenInserted: Bool = false
+    
     init(puzzle: Puzzle? = nil) {
-        _puzzle = State(initialValue: puzzle ?? PuzzleFixtures.sampleEmptyPuzzle())
+        if let existingPuzzle = puzzle {
+            self.puzzle = existingPuzzle
+            self.isNewPuzzle = false
+            self._hasBeenInserted = State(initialValue: true)
+        } else {
+            self.puzzle = PuzzleFixtures.sampleEmptyPuzzle()
+            self.isNewPuzzle = true
+            self._hasBeenInserted = State(initialValue: false)
+        }
     }
     
     var body: some View {
@@ -47,13 +61,14 @@ struct PuzzleCreationView: View {
                     focusedField = nil
                 }
         )
-        .navigationTitle("New Puzzle")
+        .navigationTitle(isNewPuzzle ? "New Puzzle" : "Edit Puzzle")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {
-                    // Action placeholder
+                    // TODO: Navigate to preview
                 }
+                .disabled(!hasContent)
             }
             
             ToolbarItemGroup(placement: .keyboard) {
@@ -69,6 +84,38 @@ struct PuzzleCreationView: View {
                 }
                 .disabled(isLastField)
             }
+        }
+        .onAppear {
+            // Insert new puzzle into context on first appearance
+            if isNewPuzzle && !hasBeenInserted {
+                modelContext.insert(puzzle)
+                hasBeenInserted = true
+            }
+        }
+        .onChange(of: puzzle.groups) { oldValue, newValue in
+            // Autosave when groups change
+            saveChanges()
+        }
+        .onDisappear {
+            // Final save when leaving the view
+            saveChanges()
+        }
+    }
+    
+    private var hasContent: Bool {
+        // Check if puzzle has any non-empty words
+        return puzzle.groups.contains { group in
+            group.words.contains { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        }
+    }
+    
+    private func saveChanges() {
+        guard hasBeenInserted else { return }
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save puzzle: \(error)")
         }
     }
     

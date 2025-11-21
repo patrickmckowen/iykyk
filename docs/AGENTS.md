@@ -261,15 +261,22 @@ Goal: We should be able to open Xcode’s preview canvas and iterate quickly on 
 
 Even though previews are primary, we still need a thin shell for running on device.
 
-**App entry flow suggestions:**
-- Simple root view with:
-  - A button to open **Puzzle Library** (list of saved puzzles).
-  - A button to create a new puzzle using the **default creation flow**.
+**App entry flow:**
+- Root view displays **Puzzle Library** as the home screen.
+- Floating action button at bottom-right to create new puzzle.
 
 **`PuzzleLibraryView` responsibilities:**
-- Display all puzzles from `PuzzleRepository`.
+- Display all puzzles from SwiftData using `@Query`, sorted by creation date (most recent first).
+- Each puzzle row shows title (or "Untitled Puzzle"), word count progress, and creation date.
 - Tap to edit an existing puzzle via the creation flow.
-- Optionally, allow deletion for cleanup.
+- Swipe to delete puzzles.
+- Floating action button opens creation flow for new puzzle.
+
+**Autosave behavior:**
+- Puzzles are automatically inserted into SwiftData when creation begins.
+- Changes are saved automatically as the user edits.
+- Back navigation triggers a final save before dismissing.
+- No explicit "Save" button needed—changes persist immediately.
 
 Keep navigation minimal and avoid over-engineering router patterns at this stage.
 

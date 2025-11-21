@@ -12,7 +12,7 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 
 ```
 ┌─────────────────────────────┐
-│   Puzzle Title              │  ← Editable text field
+│  < Back          Next >     │  ← Toolbar (autosave, navigate)
 │                             │
 │  ╔══ SCROLLABLE CONTENT ══╗ │
 │  ║ Group 1 ───────────────║ │  ← Tap group label to edit
@@ -35,8 +35,6 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 │  ║ │ W1 │ W2 │ W3 │ W4 │ ║ │
 │  ║ └────┴────┴────┴────┘ ║ │
 │  ╚════════════════════════╝ │
-│                             │
-│  [Save Draft] [Preview]    │  ← Bottom actions
 └─────────────────────────────┘
      ▲
      │
@@ -88,19 +86,17 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 
 ## 4. Navigation & Actions
 
-### 4.1 Top Navigation Bar
-- **Cancel** (left): Discards unsaved changes, returns to library
-- **Title**: "New Puzzle"
-- *(No right button needed—saves happen automatically)*
+### 4.1 Toolbar Navigation
+- **Back** (left): Returns to puzzle library, triggers autosave on dismiss
+- **Title**: "New Puzzle" or "Edit Puzzle" depending on mode
+- **Next** (right): Navigates to preview/next step in creation flow
+  - Enabled when puzzle has content (at least one word filled)
 
-### 4.2 Bottom Actions
-- **Save Draft**: Saves puzzle to library (always available, even if incomplete)
-- **Preview**: Opens preview mode to see puzzle as player would (shuffled tiles)
-  - Available only when puzzle is valid (4 categories × 4 words all filled)
-
-### 4.3 Auto-save Behavior
-- Changes are auto-saved locally as user types
-- "Save Draft" button provides explicit confirmation and returns to library
+### 4.2 Autosave Behavior
+- New puzzles are inserted into SwiftData when creation begins
+- Changes are saved automatically as the user edits
+- Back navigation triggers a final save before dismissing
+- No explicit "Save" button—changes persist immediately
 - No risk of data loss
 
 ---
@@ -124,24 +120,15 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 
 Each component naturally defines its own size:
 
-**Puzzle Title Field**
-- Height: ~44-50pt (TextField with padding)
-- Top/bottom padding: 8-12pt
-
 **Group Row (each of 4)**
 - Group label: 16-18pt font + 4-8pt padding = ~24-28pt
 - Word tiles row: 44pt minimum height + 8pt internal padding = ~52pt
 - Bottom spacing: 12pt
 - **Total per group: ~88-92pt**
 
-**Bottom Actions Bar**
-- Height: ~60pt (buttons + padding)
-
 **Estimated Total Content Height**
-- Title: 50pt
 - 4 groups: 4 × 90pt = 360pt
-- Actions: 60pt
-- **Total: ~470pt**
+- **Total: ~360pt**
 
 This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirming scrolling is necessary. SwiftUI's `VStack` calculates this automatically—no manual height setting required.
 
@@ -189,32 +176,32 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 ### 7.1 New Puzzle State
 - All 16 word tiles show "WORD" placeholder
 - Group labels show "Group 1", "Group 2", etc.
-- Puzzle title shows "New Puzzle"
 
 ### 7.2 Partially Complete Puzzle
 - Some tiles filled, others empty
-- Can save at any state
-- Preview button disabled until all fields filled
+- Changes autosave immediately
+- Next button disabled until puzzle has content
 
 ### 7.3 Validation (Minimal for MVP)
 - **No in-your-face validation errors**
-- Preview button is simply disabled if puzzle incomplete
-- Optionally: subtle red tint or icon on Save/Preview if there are issues (like duplicate words)
+- Next button is simply disabled if puzzle has no content
+- Optionally: subtle indicators if there are issues (like duplicate words)
 - **No blocking alerts or modals**—keep flow uninterrupted
 
 ---
 
 **MVP scope:**
-- Single-screen, inline editing
-- Auto-save to local persistence
-- Ability to create and save a valid 4×4 puzzle
+- Puzzle library home screen with list of saved puzzles
+- Single-screen, inline editing for puzzle creation
+- Autosave to local persistence (SwiftData)
+- Ability to create and edit 4×4 puzzles
 - Ability to preview puzzle as player would see it
 
 ---
 
 ## 8. Preview Mode (Minimal Spec)
 
-**Accessed via "Preview" button** when puzzle is complete.
+**Accessed via "Next" button** in toolbar when puzzle has content.
 
 **Layout:**
 - Full-screen view
@@ -222,7 +209,7 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 - Tiles look like they will in gameplay (no group grouping visible)
 - **No gameplay interaction** in MVP—this is purely visual preview
 - **Back** to return and keep editing
-- **Publish** to finish
+- **Next** to continue to publish/share flow
 
 **Purpose:**
 - Let creator see puzzle from solver's perspective
@@ -246,21 +233,19 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 ```
 CreationView (main container)
 ├─ VStack (spacing: 0) [fills available height]
-│  ├─ PuzzleTitleField (editable, fixed height with padding)
-│  ├─ ScrollView (flexible, takes remaining space)
-│  │  └─ VStack (spacing: 12) [naturally sized by children]
+│  ├─ ScrollView (flexible, takes full space)
+│  │  └─ VStack (spacing: 16) [naturally sized by children]
 │  │     ├─ GroupRowView (group 0)
 │  │     │  ├─ GroupLabelField (16-18pt font + padding)
 │  │     │  └─ HStack (4 word tiles, each 44pt min height)
 │  │     ├─ GroupRowView (group 1)
 │  │     ├─ GroupRowView (group 2)
 │  │     └─ GroupRowView (group 3)
-│  └─ BottomActionsView (fixed height, Save/Preview buttons)
 ```
 
 **Key layout principles:**
 - Outer `VStack` uses `.frame(maxHeight: .infinity)` to fill screen
-- `ScrollView` is given flexible space via `Spacer()` or flexible frame
+- `ScrollView` takes full available space
 - Inner `VStack` inside `ScrollView` naturally sizes based on its children
 - No hardcoded total heights—each component defines its own size
 - SwiftUI handles all content sizing and scrolling automatically
@@ -269,35 +254,34 @@ CreationView (main container)
 
 ```swift
 VStack(spacing: 0) {
-    // Fixed-height title
-    PuzzleTitleField()
-        .padding()
-    
     // Flexible scrollable content
     ScrollView {
-        VStack(spacing: 12) {  // Natural sizing
+        VStack(spacing: 16) {  // Natural sizing
             ForEach(puzzle.groups) { group in
                 GroupRowView(group: group)
             }
         }
         .padding(.horizontal)
+        .padding(.bottom, 100)
     }
+    .scrollDismissesKeyboard(.interactively)
     
-    // Fixed-height actions
-    BottomActionsView()
+    Spacer()
 }
 .frame(maxHeight: .infinity)
 ```
 
 ### 10.3 State Management
-- Single `@StateObject` view model (`PuzzleCreationViewModel`)
-- Holds mutable `Puzzle` instance
-- Handles save/update via `PuzzleRepository`
-- Manages validation state for enabling/disabling Preview button
+- `PuzzleCreationView` receives either a new puzzle or existing puzzle to edit
+- Uses `@Bindable` for the puzzle instance (SwiftData model)
+- Accesses `@Environment(\.modelContext)` for persistence
+- Tracks whether puzzle is new (needs insert) or existing (needs update)
+- Autosaves changes via `onChange` and `onDisappear` modifiers
+- Manages validation state for enabling/disabling Next button
 
 ### 10.4 Focus Management
 - Use `@FocusState` for tracking which field is active
-- Enum to represent all focusable fields (puzzle title, 4 group names, 16 word fields)
+- Enum to represent all focusable fields (4 group names, 16 word fields)
 
 ### 10.5 Keyboard Handling
 - Rely on SwiftUI's native keyboard avoidance (`.scrollDismissesKeyboard(.interactively)`)
@@ -340,14 +324,18 @@ This keeps the creation and preview experiences aligned: creators edit directly 
 ## 11. Success Criteria for MVP
 
 **UX:**
+- Puzzle library shows all saved puzzles at a glance
+- Floating action button provides clear path to create new puzzle
 - Tapping any tile immediately allows editing with no mode-switching
 - Active field automatically scrolls into view when keyboard appears
 - Smooth, natural scrolling to access all groups while editing
 - Flow feels fast, direct, and unobstructed
 - Comfortable tap targets and readable text throughout
+- Changes autosave without explicit user action
 
 **Technical:**
-- Puzzle persists across app restarts (SwiftData)
+- Puzzles persist across app restarts (SwiftData)
+- Can create new puzzles and edit existing ones
 - Preview mode shows randomized word order
 - Previews render correctly in Xcode canvas
 
@@ -361,13 +349,13 @@ This keeps the creation and preview experiences aligned: creators edit directly 
 ## 12. Post-MVP Enhancements (Not Now)
 
 Once this foundation is solid, consider:
+- Add puzzle title field for custom naming
 - Tap outside focused field to dismiss keyboard
 - Duplicate word detection (show subtle warning)
 - Swipe group row to delete/reorder
 - Drag-and-drop words between groups
 - More sophisticated preview with full gameplay
 - Transition animations for entering/exiting preview
-- Puzzle title suggestions based on group names
 - Character count indicators on fields
 
 ---
