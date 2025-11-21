@@ -15,22 +15,22 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 │   Puzzle Title              │  ← Editable text field
 │                             │
 │  ╔══ SCROLLABLE CONTENT ══╗ │
-│  ║ Category 1 ────────────║ │  ← Tap category label to edit
+│  ║ Group 1 ───────────────║ │  ← Tap group label to edit
 │  ║ ┌────┬────┬────┬────┐ ║ │
 │  ║ │ W1 │ W2 │ W3 │ W4 │ ║ │  ← Tap any word to edit
 │  ║ └────┴────┴────┴────┘ ║ │
 │  ║                        ║ │
-│  ║ Category 2 ────────────║ │
+│  ║ Group 2 ───────────────║ │
 │  ║ ┌────┬────┬────┬────┐ ║ │
 │  ║ │ W1 │ W2 │ W3 │ W4 │ ║ │
 │  ║ └────┴────┴────┴────┘ ║ │
 │  ║                        ║ │
-│  ║ Category 3 ────────────║ │  ← May be partially visible
+│  ║ Group 3 ───────────────║ │  ← May be partially visible
 │  ║ ┌────┬────┬────┬────┐ ║ │     depending on device size
 │  ║ │ W1 │ W2 │ W3 │ W4 │ ║ │     when keyboard is up
 │  ║ └────┴────┴────┴────┘ ║ │
 │  ║                        ║ │
-│  ║ Category 4 ────────────║ │  ← Scroll down to access
+│  ║ Group 4 ───────────────║ │  ← Scroll down to access
 │  ║ ┌────┬────┬────┬────┐ ║ │
 │  ║ │ W1 │ W2 │ W3 │ W4 │ ║ │
 │  ║ └────┴────┴────┴────┘ ║ │
@@ -65,23 +65,23 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 - **Active tile** (currently editing) has a distinct border or glow
 - **Filled tiles** show the word text in primary color
 
-### 3.2 Editing Category Names
+### 3.2 Editing Group Names
 
-**Tap the category label** (e.g., "Category 1") → it becomes an editable field:
+**Tap the group label** (e.g., "Group 1") → it becomes an editable field:
 - Small inline text field expands from the label position
 - Keyboard appears
-- User types the category name
+- User types the group name
 - Field has a character limit (e.g., 24 characters) with counter shown
 - **Return key or tap outside** → field saves and collapses back to label
 
 **Empty state:**
-- Default labels: "Category 1", "Category 2", etc. in placeholder style
+- Default labels: "Group 1", "Group 2", etc. in placeholder style
 - Once edited, shows user's custom name
 
 ### 3.3 Row Visual Grouping
 
-- Each row (category) has a **subtle background container** that groups its 4 tiles together
-- Category label is positioned immediately above its row
+- Each row (group) has a **subtle background container** that groups its 4 tiles together
+- Group label is positioned immediately above its row
 - Tapping anywhere in the row background *except* on a tile or label does nothing (allows for accidental touches)
 
 ---
@@ -111,7 +111,7 @@ This MVP prioritizes simplicity, speed of implementation, and comfortable tap ta
 - Board content uses a `ScrollView` containing a `VStack`
 - Total board height is determined naturally by component sizes:
   - Puzzle title field + padding
-  - 4 category sections (label + 4-tile row + spacing) × 4
+  - 4 group sections (label + 4-tile row + spacing) × 4
   - Bottom action buttons
 - When keyboard appears, SwiftUI's automatic keyboard avoidance scrolls the active field into view
 - User can manually scroll to see other rows while keyboard remains up
@@ -128,25 +128,25 @@ Each component naturally defines its own size:
 - Height: ~44-50pt (TextField with padding)
 - Top/bottom padding: 8-12pt
 
-**Category Row (each of 4)**
-- Category label: 16-18pt font + 4-8pt padding = ~24-28pt
+**Group Row (each of 4)**
+- Group label: 16-18pt font + 4-8pt padding = ~24-28pt
 - Word tiles row: 44pt minimum height + 8pt internal padding = ~52pt
 - Bottom spacing: 12pt
-- **Total per category: ~88-92pt**
+- **Total per group: ~88-92pt**
 
 **Bottom Actions Bar**
 - Height: ~60pt (buttons + padding)
 
 **Estimated Total Content Height**
 - Title: 50pt
-- 4 categories: 4 × 90pt = 360pt
+- 4 groups: 4 × 90pt = 360pt
 - Actions: 60pt
 - **Total: ~470pt**
 
 This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirming scrolling is necessary. SwiftUI's `VStack` calculates this automatically—no manual height setting required.
 
 ### 5.3 Focus Management
-- Tapping a tile/category field brings up keyboard and focuses that field
+- Tapping a tile/group field brings up keyboard and focuses that field
 - **Keyboard toolbar** Moves focus through fields in logical order (left-to-right, top-to-bottom)
 - **Return key**: Defocuses current field, keyboard dismisses
 
@@ -160,7 +160,7 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
   - Clear tile borders or shadows to define tappable areas
   - Strong, readable typography for tile text
 - **Restrained color usage**
-  - Each category has it's own unique color to identify difficulty like NYT Connections.  The color coding is persistent globally across all puzzles in iykyk
+  - Each group has its own unique color to identify difficulty like NYT Connections. The color coding is persistent globally across all puzzles in iykyk
   - Active/focused state uses accent color or gentle glow
 - **Spacing & rhythm**
   - Consistent padding within and between rows
@@ -188,7 +188,7 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 
 ### 7.1 New Puzzle State
 - All 16 word tiles show "WORD" placeholder
-- Category labels show "Category 1", "Category 2", etc.
+- Group labels show "Group 1", "Group 2", etc.
 - Puzzle title shows "New Puzzle"
 
 ### 7.2 Partially Complete Puzzle
@@ -219,7 +219,7 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 **Layout:**
 - Full-screen view
 - 16 tiles in a 4×4 grid, **shuffled randomly** (order different from creation view)
-- Tiles look like they will in gameplay (no category grouping visible)
+- Tiles look like they will in gameplay (no group grouping visible)
 - **No gameplay interaction** in MVP—this is purely visual preview
 - **Back** to return and keep editing
 - **Publish** to finish
@@ -249,12 +249,12 @@ CreationView (main container)
 │  ├─ PuzzleTitleField (editable, fixed height with padding)
 │  ├─ ScrollView (flexible, takes remaining space)
 │  │  └─ VStack (spacing: 12) [naturally sized by children]
-│  │     ├─ CategoryRowView (group 0)
-│  │     │  ├─ CategoryLabelField (16-18pt font + padding)
+│  │     ├─ GroupRowView (group 0)
+│  │     │  ├─ GroupLabelField (16-18pt font + padding)
 │  │     │  └─ HStack (4 word tiles, each 44pt min height)
-│  │     ├─ CategoryRowView (group 1)
-│  │     ├─ CategoryRowView (group 2)
-│  │     └─ CategoryRowView (group 3)
+│  │     ├─ GroupRowView (group 1)
+│  │     ├─ GroupRowView (group 2)
+│  │     └─ GroupRowView (group 3)
 │  └─ BottomActionsView (fixed height, Save/Preview buttons)
 ```
 
@@ -277,7 +277,7 @@ VStack(spacing: 0) {
     ScrollView {
         VStack(spacing: 12) {  // Natural sizing
             ForEach(puzzle.groups) { group in
-                CategoryRowView(group: group)
+                GroupRowView(group: group)
             }
         }
         .padding(.horizontal)
@@ -297,7 +297,7 @@ VStack(spacing: 0) {
 
 ### 10.4 Focus Management
 - Use `@FocusState` for tracking which field is active
-- Enum to represent all focusable fields (puzzle title, 4 category names, 16 word fields)
+- Enum to represent all focusable fields (puzzle title, 4 group names, 16 word fields)
 
 ### 10.5 Keyboard Handling
 - Rely on SwiftUI's native keyboard avoidance (`.scrollDismissesKeyboard(.interactively)`)
@@ -342,7 +342,7 @@ This keeps the creation and preview experiences aligned: creators edit directly 
 **UX:**
 - Tapping any tile immediately allows editing with no mode-switching
 - Active field automatically scrolls into view when keyboard appears
-- Smooth, natural scrolling to access all categories while editing
+- Smooth, natural scrolling to access all groups while editing
 - Flow feels fast, direct, and unobstructed
 - Comfortable tap targets and readable text throughout
 
@@ -363,18 +363,18 @@ This keeps the creation and preview experiences aligned: creators edit directly 
 Once this foundation is solid, consider:
 - Tap outside focused field to dismiss keyboard
 - Duplicate word detection (show subtle warning)
-- Swipe category row to delete/reorder
-- Drag-and-drop words between categories
+- Swipe group row to delete/reorder
+- Drag-and-drop words between groups
 - More sophisticated preview with full gameplay
 - Transition animations for entering/exiting preview
-- Puzzle title suggestions based on category names
+- Puzzle title suggestions based on group names
 - Character count indicators on fields
 
 ---
 
 ## Summary
 
-This MVP trades elaborate transitions and category-level editing for **directness, clarity, and full spatial context**. By keeping the entire board visible and allowing inline editing, we eliminate mode-switching complexity and make the creation process feel immediate and transparent.
+This MVP trades elaborate transitions and group-level editing for **directness, clarity, and full spatial context**. By keeping the entire board visible and allowing inline editing, we eliminate mode-switching complexity and make the creation process feel immediate and transparent.
 
 The interaction model is as simple as it gets: **tap what you want to edit, type, done.** This aligns with native iOS conventions, requires minimal custom code, and lets us focus on polish within a constrained scope.
 

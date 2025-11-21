@@ -22,6 +22,13 @@ struct EditableWordTile: View {
     private let textHorizontalBuffer: CGFloat = 10
     private let cornerRadius: CGFloat = 8
     
+    private var activeBorderColor: Color {
+        if case .word(let groupIndex, _) = fieldID {
+            return GroupColors.color(for: groupIndex)
+        }
+        return .gray
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -35,7 +42,7 @@ struct EditableWordTile: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .strokeBorder(
-                                focusedField == fieldID ? Color.accentColor : Color(.systemGray4),
+                                focusedField == fieldID ? activeBorderColor : Color(.systemGray4),
                                 lineWidth: focusedField == fieldID ? 2 : 1
                             )
                     )

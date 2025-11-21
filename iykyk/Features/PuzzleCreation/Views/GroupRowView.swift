@@ -1,5 +1,5 @@
 //
-//  CategoryRowView.swift
+//  GroupRowView.swift
 //  iykyk
 //
 //  Created by Patrick McKowen on 11/19/25.
@@ -7,18 +7,31 @@
 
 import SwiftUI
 
-struct CategoryRowView: View {
+struct GroupRowView: View {
     @Bindable var group: PuzzleGroup
     @FocusState.Binding var focusedField: PuzzleCreationFocusField?
     
+    private var isGroupNameFocused: Bool {
+        if case .groupName(let index) = focusedField {
+            return index == group.position
+        }
+        return false
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Category label
-            Text(categoryLabel)
-                .font(.subheadline)
+            // Group name TextField with animated scaling
+            TextField("Group \(group.position + 1)", text: $group.title)
+                .font(isGroupNameFocused ? .title3 : .subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
+                .focused($focusedField, equals: .groupName(groupIndex: group.position))
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
+                .submitLabel(.done)
+                .onSubmit {
+                    focusedField = nil
+                }
             
             // 4 word tiles in a row
             HStack(spacing: 8) {
@@ -35,13 +48,6 @@ struct CategoryRowView: View {
             }
         }
     }
-    
-    private var categoryLabel: String {
-        if group.title.isEmpty {
-            return "Category \(group.position + 1)"
-        }
-        return group.title
-    }
 }
 
 #Preview("Empty Group") { @MainActor in
@@ -50,7 +56,7 @@ struct CategoryRowView: View {
     let words = (0...3).map { PuzzleWord(text: "", position: $0) }
     let group = PuzzleGroup(title: "", position: 0, words: words)
     
-    CategoryRowView(
+    GroupRowView(
         group: group,
         focusedField: $focusedField
     )
@@ -68,7 +74,7 @@ struct CategoryRowView: View {
     ]
     let group = PuzzleGroup(title: "Coffee Drinks", position: 0, words: words)
     
-    CategoryRowView(
+    GroupRowView(
         group: group,
         focusedField: $focusedField
     )
@@ -86,9 +92,10 @@ struct CategoryRowView: View {
     ]
     let group = PuzzleGroup(title: "Programming Languages", position: 1, words: words)
     
-    CategoryRowView(
+    GroupRowView(
         group: group,
         focusedField: $focusedField
     )
     .padding()
 }
+

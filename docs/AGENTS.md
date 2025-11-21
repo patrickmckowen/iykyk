@@ -17,8 +17,8 @@ The twist: **puzzles are made by people you know**, so themes can be inside joke
 ## 3. Core Loop (v1)
 
 1. **Create** – A user creates a 4×4 puzzle:
-   - 4 categories (groups) with a title each
-   - 4 words per category
+   - 4 groups with a title each
+   - 4 words per group
 
 2. **Style** - User previews how the puzzle will appear to the player and can select from different design templates and customize the individual styles:
    - Wallpaper (image, emoji wallpaper, color, gradient)
@@ -118,7 +118,7 @@ We model a single iykyk puzzle with a hard 4×4 constraint.
 
 **PuzzleGroup**
 - `id: UUID`
-- `title: String` – category name players are meant to infer.
+- `title: String` – group name players are meant to infer.
 - `position: Int` – row position (0-3) for stable ordering in creation UI.
 - `words: [PuzzleWord]`
 
@@ -222,7 +222,7 @@ iykyk/
       Views/
         CreationView.swift
         CreationView_Previews.swift
-        CategoryEditorView.swift
+        GroupEditorView.swift
         WordListEditorView.swift
         PuzzleSummaryView.swift
     PuzzlePlay/
@@ -249,8 +249,8 @@ Previews are central to this phase.
 2. Previews must:
    - Use `InMemoryPuzzleRepository` or fixture instances.
    - Simulate at least three states where applicable:
-     - **Empty** – new puzzle, no categories/words yet.
-     - **Partial** – some categories/words filled in.
+     - **Empty** – new puzzle, no groups/words yet.
+     - **Partial** – some groups/words filled in.
      - **Completed** – 4×4 valid puzzle.
 3. Consider using preview helpers in `PreviewSupport` to keep preview code DRY.
 
