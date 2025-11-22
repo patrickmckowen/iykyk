@@ -129,25 +129,7 @@ struct PuzzleRowView: View {
     }
 }
 
-#Preview("Empty Library") {
+#Preview {
     PuzzleLibraryView()
-        .modelContainer(for: [Puzzle.self, PuzzleGroup.self, PuzzleWord.self], inMemory: true)
+        .modelContainer(for: Puzzle.self, inMemory: true)
 }
-
-#Preview("Library with Puzzles") {
-    let container = try! ModelContainer(
-        for: Puzzle.self, PuzzleGroup.self, PuzzleWord.self,
-        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-    )
-    
-    // Insert sample puzzles
-    let context = container.mainContext
-    let puzzle1 = PuzzleFixtures.sampleCompletedPuzzle()
-    let puzzle2 = PuzzleFixtures.samplePartialPuzzle()
-    context.insert(puzzle1)
-    context.insert(puzzle2)
-    
-    return PuzzleLibraryView()
-        .modelContainer(container)
-}
-

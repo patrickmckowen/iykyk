@@ -50,52 +50,28 @@ struct GroupRowView: View {
     }
 }
 
-#Preview("Empty Group") { @MainActor in
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+private struct GroupRowView_PreviewWrapper: View {
+    @FocusState private var focusedField: PuzzleCreationFocusField?
     
-    let words = (0...3).map { PuzzleWord(text: "", position: $0) }
-    let group = PuzzleGroup(title: "", position: 0, words: words)
+    private let group: PuzzleGroup = {
+        let words = [
+            PuzzleWord(text: "LATTE", position: 0),
+            PuzzleWord(text: "MOCHA", position: 1),
+            PuzzleWord(text: "ESPRESSO", position: 2),
+            PuzzleWord(text: "CAPPUCCINO", position: 3)
+        ]
+        return PuzzleGroup(title: "Coffee Drinks", position: 0, words: words)
+    }()
     
-    GroupRowView(
-        group: group,
-        focusedField: $focusedField
-    )
-    .padding()
+    var body: some View {
+        GroupRowView(
+            group: group,
+            focusedField: $focusedField
+        )
+        .padding()
+    }
 }
 
-#Preview("Filled Group") { @MainActor in
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    let words = [
-        PuzzleWord(text: "LATTE", position: 0),
-        PuzzleWord(text: "MOCHA", position: 1),
-        PuzzleWord(text: "ESPRESSO", position: 2),
-        PuzzleWord(text: "CAPPUCCINO", position: 3)
-    ]
-    let group = PuzzleGroup(title: "Coffee Drinks", position: 0, words: words)
-    
-    GroupRowView(
-        group: group,
-        focusedField: $focusedField
-    )
-    .padding()
+#Preview {
+    GroupRowView_PreviewWrapper()
 }
-
-#Preview("Mixed Content") { @MainActor in
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    let words = [
-        PuzzleWord(text: "PYTHON", position: 0),
-        PuzzleWord(text: "SWIFT", position: 1),
-        PuzzleWord(text: "", position: 2),
-        PuzzleWord(text: "", position: 3)
-    ]
-    let group = PuzzleGroup(title: "Programming Languages", position: 1, words: words)
-    
-    GroupRowView(
-        group: group,
-        focusedField: $focusedField
-    )
-    .padding()
-}
-
