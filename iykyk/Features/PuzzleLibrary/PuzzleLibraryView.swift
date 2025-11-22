@@ -93,9 +93,12 @@ struct EmptyStateView: View {
 struct PuzzleRowView: View {
     let puzzle: Puzzle
     
-    private var displayTitle: String {
-        let trimmed = puzzle.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Untitled Puzzle" : trimmed
+    private var sequenceText: String {
+        if let number = puzzle.sequenceNumber, number > 0 {
+            return "#\(number)"
+        } else {
+            return "#?"
+        }
     }
     
     private var wordCount: Int {
@@ -113,7 +116,7 @@ struct PuzzleRowView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(displayTitle)
+            Text(sequenceText)
                 .font(.headline)
             
             HStack {

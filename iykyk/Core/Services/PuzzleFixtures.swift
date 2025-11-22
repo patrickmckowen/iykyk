@@ -11,6 +11,8 @@ struct PuzzleFixtures {
     /// Creates an empty puzzle with full 4×4 structure (4 groups × 4 words with empty text)
     /// Ready for creation UI to render immediately
     static func sampleEmptyPuzzle() -> Puzzle {
+        let sequenceNumber = PuzzleNumberingService.nextSequenceNumber()
+        
         let groups = (0...3).map { groupPosition in
             let words = (0...3).map { wordPosition in
                 PuzzleWord(text: "", position: wordPosition)
@@ -19,6 +21,7 @@ struct PuzzleFixtures {
         }
         
         return Puzzle(
+            sequenceNumber: sequenceNumber,
             title: "New Puzzle",
             creatorName: nil,
             groups: groups
