@@ -19,6 +19,7 @@ struct PuzzleCreationView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: PuzzleCreationFocusField?
+    @State private var isShowingPreview: Bool = false
     
     private let isNewPuzzle: Bool
     @State private var hasBeenInserted: Bool = false
@@ -38,6 +39,14 @@ struct PuzzleCreationView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            NavigationLink(
+                destination: PuzzlePreviewView(puzzle: puzzle),
+                isActive: $isShowingPreview
+            ) {
+                EmptyView()
+            }
+            .hidden()
+
             // Flexible scrollable content
             ScrollView {
                 VStack(spacing: 16) {
@@ -69,7 +78,7 @@ struct PuzzleCreationView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {
-                    // TODO: Navigate to preview
+                    isShowingPreview = true
                 }
                 .disabled(!hasContent)
             }
