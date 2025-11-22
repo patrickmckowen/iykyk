@@ -329,3 +329,53 @@ This section defines the minimal gameplay contract required for building consist
 ### 12.5 Win Condition
 
 The puzzle is solved when all 4 groups have been correctly identified.
+
+---
+## 13. Inject Hot Reloading for SwiftUI Views
+
+We use [Inject](https://github.com/krzysztofzablocki/Inject) for hot reloading during development (see also the reference example commit: [InjectSwiftUIExample](https://github.com/MarcoEidinger/InjectSwiftUIExample/commit/35716d596028439732cdf190c7acb6686221fdd2)).
+
+### 13.1 Project setup (one-time)
+
+- The `Inject` Swift package is already added to the app target.
+- `OTHER_LDFLAGS` for the Debug configuration includes `-Xlinker -interposable` so injection can swizzle symbols at runtime.
+- To use injection while running the app:
+  - Launch the InjectionIII app and point it at this project.
+  - Run the app in Debug from Xcode.
+
+You usually don’t have to touch this project-level setup unless Xcode/project settings change.
+
+### 13.2 How to wire a new SwiftUI view for injection
+
+For any SwiftUI `View` where you want hot reloading:
+
+1. **Import Inject** at the top of the file:
+
+   ```swift
+   import Inject
+   ```
+
+2. **Add the injection observer** inside the view:
+
+   ```swift
+   struct MyView: View {
+       @ObserveInjection private var inject
+       // other properties...
+   }
+   ```
+
+3. **Enable injection on the outermost view in `body`**:
+
+   ```swift
+   var body: some View {
+       SomeContainerView {
+           // your content
+       }
+       .enableInjection()
+   }
+   ```
+
+Guidelines:
+- Put `.enableInjection()` as far out as possible in the view hierarchy (usually on the root container, like a `NavigationStack`, `VStack`, or `ZStack`).
+- Child views nested under an instrumented parent will still participate in injection when you edit them, but for frequently edited leaf views it can be useful to wire them up directly as well.
+- Keep this strictly as a **development tool**; do not rely on Inject for any production behavior.

@@ -7,10 +7,14 @@
 
 import SwiftUI
 import SwiftData
+import Inject
 
 struct RootView: View {
+    @ObserveInjection private var inject
+    
     var body: some View {
         PuzzleLibraryView()
+            .enableInjection()
     }
 }
 

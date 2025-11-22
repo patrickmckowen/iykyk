@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Inject
 
 enum PuzzleCreationFocusField: Hashable {
     case groupName(groupIndex: Int)
@@ -21,6 +22,7 @@ struct PuzzleCreationView: View {
     
     private let isNewPuzzle: Bool
     @State private var hasBeenInserted: Bool = false
+    @ObserveInjection private var inject
     
     init(puzzle: Puzzle? = nil) {
         if let existingPuzzle = puzzle {
@@ -100,6 +102,7 @@ struct PuzzleCreationView: View {
             // Final save when leaving the view
             saveChanges()
         }
+        .enableInjection()
     }
     
     private var hasContent: Bool {

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8797420B2ED17503002975E8 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 8797420A2ED17503002975E8 /* Inject */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		874AA8AC2ECA93BA00BD24CB /* iykyk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iykyk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8797420B2ED17503002975E8 /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = iykyk;
 			packageProductDependencies = (
+				8797420A2ED17503002975E8 /* Inject */,
 			);
 			productName = iykyk;
 			productReference = 874AA8AC2ECA93BA00BD24CB /* iykyk.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = 874AA8A32ECA93BA00BD24CB;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				879742092ED17503002975E8 /* XCRemoteSwiftPackageReference "Inject" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 874AA8AD2ECA93BA00BD24CB /* Products */;
 			projectDirPath = "";
@@ -167,6 +176,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
+				"OTHER_LDFLAGS[arch=*]" = (
+					"-Xlinker",
+					"-interposable",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.patrickmckowen.iykyk;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -366,6 +379,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		879742092ED17503002975E8 /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8797420A2ED17503002975E8 /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 879742092ED17503002975E8 /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 874AA8A42ECA93BA00BD24CB /* Project object */;
 }

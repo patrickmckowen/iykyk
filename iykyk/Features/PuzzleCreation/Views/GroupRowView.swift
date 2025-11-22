@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import Inject
 
 struct GroupRowView: View {
     @Bindable var group: PuzzleGroup
     @FocusState.Binding var focusedField: PuzzleCreationFocusField?
+    @ObserveInjection private var inject
     
     private var isGroupNameFocused: Bool {
         if case .groupName(let index) = focusedField {
@@ -47,6 +49,7 @@ struct GroupRowView: View {
                 }
             }
         }
+        .enableInjection()
     }
 }
 

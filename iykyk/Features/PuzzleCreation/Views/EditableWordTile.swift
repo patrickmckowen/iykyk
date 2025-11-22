@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Inject
 
 struct EditableWordTile: View {
     @Binding var text: String
@@ -14,6 +15,7 @@ struct EditableWordTile: View {
     let fieldID: PuzzleCreationFocusField
     
     @State private var fontSize: CGFloat = 16
+    @ObserveInjection private var inject
     
     // Visual constants
     private let minFontSize: CGFloat = 10
@@ -75,6 +77,7 @@ struct EditableWordTile: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .enableInjection()
     }
     
     private func updateFontSize(availableSize: CGSize) {
