@@ -22,18 +22,25 @@ struct GroupRowView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Group name TextField with animated scaling
-            TextField("Group \(group.position + 1)", text: $group.title)
-                .font(isGroupNameFocused ? .title3 : .subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 4)
-                .focused($focusedField, equals: .groupName(groupIndex: group.position))
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
-                .submitLabel(.done)
-                .onSubmit {
-                    focusedField = nil
-                }
+            // Group name TextField with difficulty label
+            HStack {
+                TextField("Group name", text: $group.title)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 4)
+                    .focused($focusedField, equals: .groupName(groupIndex: group.position))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        focusedField = nil
+                    }
+                
+                Text(GroupDifficulty.label(for: group.position).uppercased())
+                    .font(.caption2)
+                    .foregroundStyle(GroupDifficulty.color(for: group.position))
+                    .fontWeight(.medium)
+            }
             
             // 4 word tiles in a row
             HStack(spacing: 8) {

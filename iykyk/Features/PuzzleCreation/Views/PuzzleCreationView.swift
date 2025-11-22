@@ -49,6 +49,7 @@ struct PuzzleCreationView: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.top)
                 .padding(.bottom, 100) // Space for bottom actions
             }
             .scrollDismissesKeyboard(.interactively)
