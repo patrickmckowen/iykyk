@@ -16,6 +16,6 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .modelContainer(for: [Puzzle.self, PuzzleGroup.self, PuzzleWord.self], inMemory: true)
+        .modelContainer(for: Puzzle.self, inMemory: true)
 }
 

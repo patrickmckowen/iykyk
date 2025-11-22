@@ -164,20 +164,9 @@ struct PuzzleCreationView: View {
     }
 }
 
-#Preview("Empty Puzzle") {
+#Preview {
     NavigationStack {
-        PuzzleCreationView(puzzle: PuzzleFixtures.sampleEmptyPuzzle())
+        PuzzleCreationView()
     }
-}
-
-#Preview("Partial Puzzle") {
-    NavigationStack {
-        PuzzleCreationView(puzzle: PuzzleFixtures.samplePartialPuzzle())
-    }
-}
-
-#Preview("Completed Puzzle") {
-    NavigationStack {
-        PuzzleCreationView(puzzle: PuzzleFixtures.sampleCompletedPuzzle())
-    }
+    .modelContainer(for: Puzzle.self, inMemory: true)
 }

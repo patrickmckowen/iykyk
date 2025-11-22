@@ -243,18 +243,28 @@ iykyk/
 ---
 ## 10. SwiftUI Preview Strategy
 
-Previews are central to this phase.
+Previews are a lightweight way to **visually iterate on a screen as if it were running in the simulator**, without modeling lots of different states.
 
-1. The primary creation view (`CreationView`) must have a `PreviewProvider`.
-2. Previews must:
-   - Use `InMemoryPuzzleRepository` or fixture instances.
-   - Simulate at least three states where applicable:
-     - **Empty** – new puzzle, no groups/words yet.
-     - **Partial** – some groups/words filled in.
-     - **Completed** – 4×4 valid puzzle.
-3. Consider using preview helpers in `PreviewSupport` to keep preview code DRY.
+**Preview rules:**
 
-Goal: We should be able to open Xcode’s preview canvas and iterate quickly on the creation flow without running the full app.
+1. **One preview per view**
+   - Each SwiftUI view should have **a single preview block** (either a `#Preview` or a `PreviewProvider`).
+   - Avoid multiple preview variants, `Group` wrappers, or separate preview types for different scenarios.
+
+2. **Single, minimal configuration**
+   - The preview should show **one realistic configuration** of the view that you can scroll, tap, and type into.
+   - Do not model “empty / partial / complete” or other multi-state permutations in separate previews.
+   - For navigation-based screens, it is fine to wrap the view in a simple `NavigationStack` so it behaves like it does in the app.
+
+3. **Simple data and dependencies**
+   - Use the **simplest possible data setup** that makes the view usable:
+     - For SwiftData-backed views, use an in-memory container (for example, `.modelContainer(for: Puzzle.self, inMemory: true)`).
+     - For other dependencies, prefer a single fixture instance or an in-memory repository with a minimal sample puzzle.
+   - Keep any setup inline in the preview body or in a small local wrapper view; avoid complex preview-only infrastructure.
+
+4. **Purpose**
+   - The goal of a preview is to **quickly see and interact with the view**, not to exhaustively test all of its states.
+   - If you find yourself adding multiple scenarios or complex wiring, prefer to test those flows in the simulator instead.
 
 ---
 ## 11. Minimal App Shell

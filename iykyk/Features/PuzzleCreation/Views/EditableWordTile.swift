@@ -125,93 +125,21 @@ struct EditableWordTile: View {
     }
 }
 
-#Preview("Empty Tile") { @MainActor in
-    @Previewable @State var text = ""
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
+private struct EditableWordTile_PreviewWrapper: View {
+    @State private var text = "SPELLING BEE"
+    @FocusState private var focusedField: PuzzleCreationFocusField?
     
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
+    var body: some View {
+        EditableWordTile(
+            text: $text,
+            focusedField: $focusedField,
+            fieldID: .word(groupIndex: 0, wordIndex: 0)
+        )
+        .frame(width: 100)
+        .padding()
+    }
 }
 
-#Preview("Short Word") { @MainActor in
-    @Previewable @State var text = "GO"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
-}
-
-#Preview("Long Single Word") { @MainActor in
-    @Previewable @State var text = "CAPPUCCINO"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
-}
-
-#Preview("Multi-word Phrase") { @MainActor in
-    @Previewable @State var text = "SPELLING BEE"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
-}
-
-#Preview("Very Long Phrase") { @MainActor in
-    @Previewable @State var text = "REALLY LONG PHRASE THAT SHOULD SHRINK"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
-}
-
-#Preview("Single Emoji") { @MainActor in
-    @Previewable @State var text = "😄"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
-}
-
-#Preview("Multiple Emojis") { @MainActor in
-    @Previewable @State var text = "😄😎🎉"
-    @Previewable @FocusState var focusedField: PuzzleCreationFocusField?
-    
-    EditableWordTile(
-        text: $text,
-        focusedField: $focusedField,
-        fieldID: .word(groupIndex: 0, wordIndex: 0)
-    )
-    .frame(width: 100)
-    .padding()
+#Preview {
+    EditableWordTile_PreviewWrapper()
 }
