@@ -7,11 +7,13 @@
 
 import SwiftUI
 import SwiftData
+import Inject
 
 struct PuzzleLibraryView: View {
     @Query(sort: \Puzzle.createdAt, order: .reverse) private var puzzles: [Puzzle]
     @Environment(\.modelContext) private var modelContext
     @State private var showCreatePuzzle = false
+    @ObserveInjection private var inject
     
     var body: some View {
         NavigationStack {
@@ -50,6 +52,7 @@ struct PuzzleLibraryView: View {
                 }
             }
         }
+        .enableInjection()
     }
     
     private func deletePuzzles(at offsets: IndexSet) {
