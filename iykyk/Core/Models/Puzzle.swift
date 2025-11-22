@@ -11,6 +11,7 @@ import SwiftData
 @Model
 final class Puzzle {
     var id: UUID
+    var sequenceNumber: Int?
     var title: String
     var creatorName: String?
     var createdAt: Date
@@ -20,12 +21,14 @@ final class Puzzle {
     
     init(
         id: UUID = UUID(),
+        sequenceNumber: Int? = nil,
         title: String = "New Puzzle",
         creatorName: String? = nil,
         createdAt: Date = Date(),
         groups: [PuzzleGroup] = []
     ) {
         self.id = id
+        self.sequenceNumber = sequenceNumber
         self.title = title
         self.creatorName = creatorName
         self.createdAt = createdAt
