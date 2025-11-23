@@ -319,6 +319,7 @@ struct PuzzlePreviewView: View {
 struct CapsuleButtonStyle: ButtonStyle {
     var isFilled: Bool = false
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -339,7 +340,7 @@ struct CapsuleButtonStyle: ButtonStyle {
     
     private var textColor: Color {
         if isFilled {
-            return .white
+            return colorScheme == .dark ? .black : .white
         }
         return isEnabled ? .primary : .secondary
     }
