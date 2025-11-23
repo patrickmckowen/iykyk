@@ -28,7 +28,7 @@ class PuzzlePlaySession {
     var tiles: [WordTile] = []
     var selectedTileIDs: Set<UUID> = []
     var solvedGroupIDs: [UUID] = []
-    var guessesRemaining: Int = 3
+    var guessesRemaining: Int = 4
     var state: PuzzlePlayState = .inProgress
     var lastGuessResult: GuessResult?
     
@@ -124,23 +124,32 @@ class PuzzlePlaySession {
             return result
         } else {
             // Incorrect guess
-            guessesRemaining -= 1
-            selectedTileIDs.removeAll()
-            
-            // Check for lose condition
-            if guessesRemaining == 0 {
-                state = .lost
-            }
-            
             let result = GuessResult.incorrect
             lastGuessResult = result
             return result
         }
     }
     
+    /// Applies the penalty for an incorrect guess.
+    /// Should be called after the shake animation completes.
+    func applyIncorrectGuessPenalty() {
+        guessesRemaining -= 1
+        selectedTileIDs.removeAll()
+        
+        // Check for lose condition
+        if guessesRemaining == 0 {
+            state = .lost
+        }
+    }
+    
     /// Deselects all tiles.
     func clearSelection() {
         selectedTileIDs.removeAll()
+    }
+    
+    /// Shuffles the tiles.
+    func shuffle() {
+        tiles.shuffle()
     }
 }
 

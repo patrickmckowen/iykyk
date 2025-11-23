@@ -48,21 +48,44 @@ struct PuzzlePreviewView: View {
                 .padding(.horizontal)
                 
                 // Controls
-                VStack(spacing: 8) {
-                    Text("Guesses left: \(session.guessesRemaining)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    
-                    Button(action: submitGuess) {
-                        Text("Submit")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(session.canSubmitGuess ? Color.accentColor : Color.accentColor.opacity(0.4))
-                            .foregroundStyle(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                VStack(spacing: 16) {
+                    // Mistakes Remaining
+                    HStack(spacing: 8) {
+                        Text("Mistakes Remaining:")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack(spacing: 6) {
+                            ForEach(0..<4) { index in
+                                Circle()
+                                    .fill(index < session.guessesRemaining ? Color.primary.opacity(0.6) : Color.secondary.opacity(0.2))
+                                    .frame(width: 12, height: 12)
+                            }
+                        }
                     }
-                    .disabled(!session.canSubmitGuess)
+                    .padding(.top, 8)
+                    
+                    // Action Buttons
+                    HStack(spacing: 12) {
+                        Button("Shuffle") {
+                            withAnimation {
+                                session.shuffle()
+                            }
+                        }
+                        .buttonStyle(CapsuleButtonStyle())
+                        
+                        Button("Deselect All") {
+                            session.clearSelection()
+                        }
+                        .buttonStyle(CapsuleButtonStyle())
+                        .disabled(session.selectedTileIDs.isEmpty)
+                        
+                        Button("Submit") {
+                            submitGuess()
+                        }
+                        .buttonStyle(CapsuleButtonStyle(isFilled: session.canSubmitGuess))
+                        .disabled(!session.canSubmitGuess)
+                    }
                 }
                 .padding(.horizontal)
                 
@@ -171,31 +194,28 @@ struct PuzzlePreviewView: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, 4)
-                .background(
-                    // Hidden tiles for matchedGeometryEffect
-                    HStack(spacing: 0) {
-                        ForEach(tiles) { tile in
-                            Color.clear
-                                .frame(maxWidth: .infinity)
-                                .matchedGeometryEffect(id: tile.id, in: tileNamespace)
-                        }
-                    }
-                )
         }
-        .padding(.horizontal, 8)
         .frame(maxWidth: .infinity)
-        .frame(maxHeight: .infinity)
+        .frame(height: 80)
         .background(GroupColors.color(for: group.position))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .aspectRatio(4.8, contentMode: .fit)
+        .background(
+            // Hidden tiles for matchedGeometryEffect
+            HStack(spacing: 0) {
+                ForEach(tiles) { tile in
+                    Color.clear
+                        .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                }
+            }
+        )
     }
     
     @ViewBuilder
     private var validationErrorsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange)
+            .font(.system(size: 60))
+            .foregroundStyle(.orange)
             
             Text("Puzzle Needs Fixes")
                 .font(.title2)
@@ -254,6 +274,11 @@ struct PuzzlePreviewView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     shakeAmount = 0
                     shakingTileIDs.removeAll()
+                    
+                    // Apply penalty after shake completes
+                    withAnimation {
+                        session.applyIncorrectGuessPenalty()
+                    }
                 }
             }
         }
@@ -275,7 +300,7 @@ struct PuzzlePreviewView: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Color.primary)
                     .padding(4)
-                    .frame(width: geometry.size.width, height: geometry.size.width)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(isSelected ? Color(.systemGray4) : Color(.systemGray6))
@@ -288,9 +313,52 @@ struct PuzzlePreviewView: View {
             }
         }
         .buttonStyle(.plain)
-        .aspectRatio(1, contentMode: .fit)
+        .frame(height: 80)
         .modifier(ShakeEffect(amount: shouldShake ? shakeAmount : 0))
         .disabled(session.state != .inProgress)
+    }
+}
+
+struct CapsuleButtonStyle: ButtonStyle {
+    var isFilled: Bool = false
+    @Environment(\.isEnabled) private var isEnabled
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .semibold))
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .foregroundStyle(textColor)
+            .background(
+                Capsule()
+                    .fill(backgroundColor)
+            )
+            .overlay(
+                Capsule()
+                    .strokeBorder(borderColor, lineWidth: 1)
+            )
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+    
+    private var textColor: Color {
+        if isFilled {
+            return .white
+        }
+        return isEnabled ? .primary : .secondary
+    }
+    
+    private var backgroundColor: Color {
+        if isFilled {
+            return .primary
+        }
+        return .clear
+    }
+    
+    private var borderColor: Color {
+        if isFilled {
+            return .clear
+        }
+        return isEnabled ? .primary : .secondary.opacity(0.5)
     }
 }
 
@@ -315,5 +383,3 @@ struct ShakeEffect: GeometryEffect {
         PuzzlePreviewView(puzzle: PuzzleFixtures.sampleCompletedPuzzle())
     }
 }
-
-
