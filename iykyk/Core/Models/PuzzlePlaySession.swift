@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 
 /// Represents the current state of an active puzzle play session.
 enum PuzzlePlayState {
@@ -21,14 +22,15 @@ enum GuessResult {
 }
 
 /// Manages the state and logic for playing a puzzle.
-struct PuzzlePlaySession {
+@Observable
+class PuzzlePlaySession {
     // Core session state
-    private(set) var tiles: [WordTile] = []
-    private(set) var selectedTileIDs: Set<UUID> = []
-    private(set) var solvedGroupIDs: Set<UUID> = []
-    private(set) var guessesRemaining: Int = 3
-    private(set) var state: PuzzlePlayState = .inProgress
-    private(set) var lastGuessResult: GuessResult?
+    var tiles: [WordTile] = []
+    var selectedTileIDs: Set<UUID> = []
+    var solvedGroupIDs: Set<UUID> = []
+    var guessesRemaining: Int = 3
+    var state: PuzzlePlayState = .inProgress
+    var lastGuessResult: GuessResult?
     
     private var groupsByID: [UUID: PuzzleGroup] = [:]
     
@@ -72,7 +74,7 @@ struct PuzzlePlaySession {
     }
     
     /// Toggles selection of a tile. Only works if tile is active and game is in progress.
-    mutating func toggleSelection(for tileID: UUID) {
+    func toggleSelection(for tileID: UUID) {
         guard state == .inProgress else { return }
         
         // Check if tile is part of a solved group
@@ -96,7 +98,7 @@ struct PuzzlePlaySession {
     /// Submits the current selection as a guess.
     /// Returns the result of the guess.
     @discardableResult
-    mutating func submitGuess() -> GuessResult? {
+    func submitGuess() -> GuessResult? {
         guard canSubmitGuess else { return nil }
         
         // Get the group IDs of all selected tiles
@@ -137,7 +139,7 @@ struct PuzzlePlaySession {
     }
     
     /// Deselects all tiles.
-    mutating func clearSelection() {
+    func clearSelection() {
         selectedTileIDs.removeAll()
     }
 }

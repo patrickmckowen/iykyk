@@ -222,8 +222,7 @@ struct PuzzlePreviewView: View {
     }
     
     private func submitGuess() {
-        guard var session = playSession,
-              let result = session.submitGuess() else { return }
+        guard let result = playSession?.submitGuess() else { return }
 
         switch result {
         case .correct:
@@ -242,9 +241,6 @@ struct PuzzlePreviewView: View {
                 showIncorrectShake = false
             }
         }
-
-        // Write back mutated session so SwiftUI sees the change.
-        playSession = session
     }
     
     @ViewBuilder
@@ -253,9 +249,7 @@ struct PuzzlePreviewView: View {
         
         Button {
             withAnimation(.easeInOut(duration: 0.15)) {
-                guard var currentSession = playSession else { return }
-                currentSession.toggleSelection(for: tile.id)
-                playSession = currentSession
+                playSession?.toggleSelection(for: tile.id)
             }
         } label: {
             GeometryReader { geometry in
