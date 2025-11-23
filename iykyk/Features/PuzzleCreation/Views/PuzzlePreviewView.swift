@@ -11,28 +11,12 @@ import Inject
 struct PuzzlePreviewView: View {
     let puzzle: Puzzle
     
-    @State private var tiles: [Tile] = []
-    @State private var selectedTileIDs: Set<UUID> = []
-    @State private var guessesRemaining: Int = 3
+    @State private var playSession: PuzzlePlaySession?
+    @State private var validationIssues: [ValidationIssue] = []
+    @State private var showIncorrectShake: Bool = false
     
     @Environment(\.dismiss) private var dismiss
     @ObserveInjection private var inject
-    
-    private struct Tile: Identifiable {
-        let id: UUID
-        let text: String
-        let groupID: UUID
-    }
-    
-    private var baseTiles: [Tile] {
-        puzzle.groups.flatMap { group in
-            group.words.map { word in
-                let trimmed = word.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                let displayText = trimmed.isEmpty ? "WORD" : trimmed
-                return Tile(id: word.id, text: displayText, groupID: group.id)
-            }
-        }
-    }
     
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
@@ -40,32 +24,56 @@ struct PuzzlePreviewView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(tiles) { tile in
-                    tileView(for: tile)
+            if let session = playSession {
+                // Game state indicator
+                if session.state != .inProgress {
+                    gameOverBanner(for: session.state)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
-            }
-            .padding(.horizontal)
-            
-            VStack(spacing: 8) {
-                Text("Guesses left: \(guessesRemaining)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
                 
-                Button(action: submitGuess) {
-                    Text("Submit")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(canSubmit ? Color.accentColor : Color.accentColor.opacity(0.4))
-                        .foregroundStyle(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                // Solved groups section
+                if !session.solvedTiles.isEmpty {
+                    solvedGroupsView(session: session)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .disabled(!canSubmit)
+                
+                // Active tiles grid
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(session.activeTiles) { tile in
+                        tileView(for: tile, session: session)
+                    }
+                }
+                .padding(.horizontal)
+                .modifier(ShakeEffect(shake: showIncorrectShake))
+                
+                // Controls
+                VStack(spacing: 8) {
+                    Text("Guesses left: \(session.guessesRemaining)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Button(action: submitGuess) {
+                        Text("Submit")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(session.canSubmitGuess ? Color.accentColor : Color.accentColor.opacity(0.4))
+                            .foregroundStyle(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .disabled(!session.canSubmitGuess)
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+            } else if !validationIssues.isEmpty {
+                // Validation errors
+                validationErrorsView
+            } else {
+                // Loading state
+                ProgressView()
+                    .padding()
             }
-            .padding(.horizontal)
-            
-            Spacer()
         }
         .padding(.top)
         .navigationTitle("Preview")
@@ -75,47 +83,180 @@ struct PuzzlePreviewView: View {
                 Button("Publish") {
                     // No-op for now
                 }
+                .disabled(playSession == nil)
             }
         }
         .onAppear {
-            if tiles.isEmpty {
-                tiles = baseTiles.shuffled()
-            }
+            initializePlaySession()
         }
         .enableInjection()
     }
     
-    private var canSubmit: Bool {
-        selectedTileIDs.count == 4 && guessesRemaining > 0
-    }
-    
-    private func toggleSelection(for tile: Tile) {
-        if selectedTileIDs.contains(tile.id) {
-            selectedTileIDs.remove(tile.id)
-        } else {
-            guard selectedTileIDs.count < 4 else { return }
-            selectedTileIDs.insert(tile.id)
-        }
-    }
-    
-    private func submitGuess() {
-        guard canSubmit else { return }
+    private func initializePlaySession() {
+        // Validate puzzle first
+        validationIssues = PuzzleValidator.validate(puzzle)
         
-        if guessesRemaining > 0 {
-            guessesRemaining -= 1
+        guard validationIssues.isEmpty else {
+            playSession = nil
+            return
         }
         
-        withAnimation(.easeInOut(duration: 0.15)) {
-            selectedTileIDs.removeAll()
+        // Create play session
+        playSession = PuzzlePlaySession(puzzle: puzzle)
+    }
+    
+    @ViewBuilder
+    private func gameOverBanner(for state: PuzzlePlayState) -> some View {
+        Group {
+            switch state {
+            case .won:
+                Text("🎉 You solved it!")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.green)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                
+            case .lost:
+                Text("Game Over")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.red)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                
+            case .inProgress:
+                EmptyView()
+            }
         }
     }
     
     @ViewBuilder
-    private func tileView(for tile: Tile) -> some View {
-        let isSelected = selectedTileIDs.contains(tile.id)
+    private func solvedGroupsView(session: PuzzlePlaySession) -> some View {
+        VStack(spacing: 8) {
+            // Group solved tiles by their groupID
+            let groupedTiles = Dictionary(grouping: session.solvedTiles) { $0.groupID }
+            let sortedGroupIDs = groupedTiles.keys.sorted { id1, id2 in
+                // Sort by group position
+                let group1 = puzzle.groups.first(where: { $0.id == id1 })
+                let group2 = puzzle.groups.first(where: { $0.id == id2 })
+                return (group1?.position ?? 0) < (group2?.position ?? 0)
+            }
+            
+            ForEach(sortedGroupIDs, id: \.self) { groupID in
+                if let group = puzzle.groups.first(where: { $0.id == groupID }),
+                   let tiles = groupedTiles[groupID] {
+                    solvedGroupRow(group: group, tiles: tiles)
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    private func solvedGroupRow(group: PuzzleGroup, tiles: [WordTile]) -> some View {
+        VStack(spacing: 4) {
+            Text(group.title.uppercased())
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(GroupColors.color(for: group.position))
+            
+            HStack(spacing: 4) {
+                ForEach(tiles) { tile in
+                    Text(tile.text)
+                        .font(.system(size: 12, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white)
+                        .padding(8)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(GroupColors.color(for: group.position))
+                        )
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    @ViewBuilder
+    private var validationErrorsView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 60))
+                .foregroundStyle(.orange)
+            
+            Text("Puzzle Needs Fixes")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(validationIssues) { issue in
+                    HStack(alignment: .top) {
+                        Text("•")
+                        Text(issue.message)
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal)
+            
+            Text("Please return to editing and complete all groups.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+    
+    private func submitGuess() {
+        guard var session = playSession,
+              let result = session.submitGuess() else { return }
+
+        switch result {
+        case .correct:
+            // Animate solved group
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                // Animation happens via state change in session
+            }
+            
+        case .incorrect:
+            // Shake animation for incorrect guess
+            withAnimation(.default) {
+                showIncorrectShake = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                showIncorrectShake = false
+            }
+        }
+
+        // Write back mutated session so SwiftUI sees the change.
+        playSession = session
+    }
+    
+    @ViewBuilder
+    private func tileView(for tile: WordTile, session: PuzzlePlaySession) -> some View {
+        let isSelected = session.selectedTileIDs.contains(tile.id)
         
         Button {
-            toggleSelection(for: tile)
+            withAnimation(.easeInOut(duration: 0.15)) {
+                guard var currentSession = playSession else { return }
+                currentSession.toggleSelection(for: tile.id)
+                playSession = currentSession
+            }
         } label: {
             GeometryReader { geometry in
                 Text(tile.text)
@@ -136,6 +277,23 @@ struct PuzzlePreviewView: View {
         }
         .buttonStyle(.plain)
         .aspectRatio(1, contentMode: .fit)
+        .disabled(session.state != .inProgress)
+    }
+}
+
+// MARK: - Shake Effect
+
+struct ShakeEffect: GeometryEffect {
+    var shake: Bool
+    
+    var animatableData: CGFloat {
+        get { shake ? 1 : 0 }
+        set { }
+    }
+    
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        let translation = shake ? sin(animatableData * .pi * 2) * 10 : 0
+        return ProjectionTransform(CGAffineTransform(translationX: translation, y: 0))
     }
 }
 
