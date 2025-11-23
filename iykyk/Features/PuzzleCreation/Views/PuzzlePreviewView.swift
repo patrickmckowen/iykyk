@@ -13,8 +13,10 @@ struct PuzzlePreviewView: View {
     
     @State private var playSession: PuzzlePlaySession?
     @State private var validationIssues: [ValidationIssue] = []
-    @State private var showIncorrectShake: Bool = false
+    @State private var shakeAmount: CGFloat = 0
+    @State private var shakingTileIDs: Set<UUID> = []
     
+    @Namespace private var tileNamespace
     @Environment(\.dismiss) private var dismiss
     @ObserveInjection private var inject
     
@@ -44,7 +46,6 @@ struct PuzzlePreviewView: View {
                     }
                 }
                 .padding(.horizontal)
-                .modifier(ShakeEffect(shake: showIncorrectShake))
                 
                 // Controls
                 VStack(spacing: 8) {
@@ -142,14 +143,9 @@ struct PuzzlePreviewView: View {
         VStack(spacing: 8) {
             // Group solved tiles by their groupID
             let groupedTiles = Dictionary(grouping: session.solvedTiles) { $0.groupID }
-            let sortedGroupIDs = groupedTiles.keys.sorted { id1, id2 in
-                // Sort by group position
-                let group1 = puzzle.groups.first(where: { $0.id == id1 })
-                let group2 = puzzle.groups.first(where: { $0.id == id2 })
-                return (group1?.position ?? 0) < (group2?.position ?? 0)
-            }
             
-            ForEach(sortedGroupIDs, id: \.self) { groupID in
+            // Iterate in solve order (order they appear in solvedGroupIDs array)
+            ForEach(session.solvedGroupIDs, id: \.self) { groupID in
                 if let group = puzzle.groups.first(where: { $0.id == groupID }),
                    let tiles = groupedTiles[groupID] {
                     solvedGroupRow(group: group, tiles: tiles)
@@ -161,28 +157,39 @@ struct PuzzlePreviewView: View {
     
     @ViewBuilder
     private func solvedGroupRow(group: PuzzleGroup, tiles: [WordTile]) -> some View {
-        VStack(spacing: 4) {
+        let wordsList = tiles.map { $0.text }.joined(separator: ", ")
+        
+        VStack(spacing: 0) {
             Text(group.title.uppercased())
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(GroupColors.color(for: group.position))
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white)
             
-            HStack(spacing: 4) {
-                ForEach(tiles) { tile in
-                    Text(tile.text)
-                        .font(.system(size: 12, weight: .bold))
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.white)
-                        .padding(8)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(GroupColors.color(for: group.position))
-                        )
+            ZStack {
+                // Hidden tiles for matchedGeometryEffect
+                HStack(spacing: 0) {
+                    ForEach(tiles) { tile in
+                        Color.clear
+                            .frame(maxWidth: .infinity)
+                            .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                    }
                 }
+                
+                // Visible comma-separated text
+                Text(wordsList)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, 4)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity)
+        .background(GroupColors.color(for: group.position))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .aspectRatio(4.8, contentMode: .fit)
     }
     
     @ViewBuilder
@@ -222,7 +229,11 @@ struct PuzzlePreviewView: View {
     }
     
     private func submitGuess() {
-        guard let result = playSession?.submitGuess() else { return }
+        // Capture the selected tile IDs before submitting
+        guard let session = playSession else { return }
+        let guessedTileIDs = session.selectedTileIDs
+        
+        guard let result = session.submitGuess() else { return }
 
         switch result {
         case .correct:
@@ -232,13 +243,20 @@ struct PuzzlePreviewView: View {
             }
             
         case .incorrect:
-            // Shake animation for incorrect guess
-            withAnimation(.default) {
-                showIncorrectShake = true
-            }
+            // Store which tiles to shake
+            shakingTileIDs = guessedTileIDs
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                showIncorrectShake = false
+            // Delay 300ms before starting shake animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
+                    shakeAmount = 2.0
+                }
+                
+                // Reset shake after animation completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    shakeAmount = 0
+                    shakingTileIDs.removeAll()
+                }
             }
         }
     }
@@ -246,6 +264,7 @@ struct PuzzlePreviewView: View {
     @ViewBuilder
     private func tileView(for tile: WordTile, session: PuzzlePlaySession) -> some View {
         let isSelected = session.selectedTileIDs.contains(tile.id)
+        let shouldShake = shakingTileIDs.contains(tile.id)
         
         Button {
             withAnimation(.easeInOut(duration: 0.15)) {
@@ -267,10 +286,12 @@ struct PuzzlePreviewView: View {
                                     .strokeBorder(Color(.systemGray4), lineWidth: 1)
                             )
                     )
+                    .matchedGeometryEffect(id: tile.id, in: tileNamespace)
             }
         }
         .buttonStyle(.plain)
         .aspectRatio(1, contentMode: .fit)
+        .modifier(ShakeEffect(amount: shouldShake ? shakeAmount : 0))
         .disabled(session.state != .inProgress)
     }
 }
@@ -278,15 +299,15 @@ struct PuzzlePreviewView: View {
 // MARK: - Shake Effect
 
 struct ShakeEffect: GeometryEffect {
-    var shake: Bool
+    var amount: CGFloat
     
     var animatableData: CGFloat {
-        get { shake ? 1 : 0 }
-        set { }
+        get { amount }
+        set { amount = newValue }
     }
     
     func effectValue(size: CGSize) -> ProjectionTransform {
-        let translation = shake ? sin(animatableData * .pi * 2) * 10 : 0
+        let translation = sin(amount * .pi * 2) * 10
         return ProjectionTransform(CGAffineTransform(translationX: translation, y: 0))
     }
 }

@@ -27,7 +27,7 @@ class PuzzlePlaySession {
     // Core session state
     var tiles: [WordTile] = []
     var selectedTileIDs: Set<UUID> = []
-    var solvedGroupIDs: Set<UUID> = []
+    var solvedGroupIDs: [UUID] = []
     var guessesRemaining: Int = 3
     var state: PuzzlePlayState = .inProgress
     var lastGuessResult: GuessResult?
@@ -58,13 +58,13 @@ class PuzzlePlaySession {
     /// Returns tiles that are part of solved groups, in solution order.
     var solvedTiles: [WordTile] {
         let solved = tiles.filter { solvedGroupIDs.contains($0.groupID) }
-        // Sort by group position
+        // Sort by solve order (index in solvedGroupIDs array)
         return solved.sorted { tile1, tile2 in
-            guard let group1 = groupsByID[tile1.groupID],
-                  let group2 = groupsByID[tile2.groupID] else {
+            guard let index1 = solvedGroupIDs.firstIndex(of: tile1.groupID),
+                  let index2 = solvedGroupIDs.firstIndex(of: tile2.groupID) else {
                 return false
             }
-            return group1.position < group2.position
+            return index1 < index2
         }
     }
     
@@ -110,7 +110,7 @@ class PuzzlePlaySession {
            let groupID = selectedGroupIDs.first,
            !solvedGroupIDs.contains(groupID) {
             // Correct guess!
-            solvedGroupIDs.insert(groupID)
+            solvedGroupIDs.append(groupID)
             selectedTileIDs.removeAll()
             
             // Check for win condition
