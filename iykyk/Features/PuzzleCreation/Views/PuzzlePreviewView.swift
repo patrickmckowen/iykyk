@@ -25,7 +25,7 @@ struct PuzzlePreviewView: View {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             if let session = playSession {
                 // Game state indicator
                 if session.state != .inProgress {
@@ -164,29 +164,27 @@ struct PuzzlePreviewView: View {
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(.white)
             
-            ZStack {
-                // Hidden tiles for matchedGeometryEffect
-                HStack(spacing: 0) {
-                    ForEach(tiles) { tile in
-                        Color.clear
-                            .frame(maxWidth: .infinity)
-                            .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+            Text(wordsList)
+                .font(.system(size: 14))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 4)
+                .background(
+                    // Hidden tiles for matchedGeometryEffect
+                    HStack(spacing: 0) {
+                        ForEach(tiles) { tile in
+                            Color.clear
+                                .frame(maxWidth: .infinity)
+                                .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                        }
                     }
-                }
-                
-                // Visible comma-separated text
-                Text(wordsList)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 4)
-            }
+                )
         }
-        .padding(.vertical, 12)
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity)
+        .frame(maxHeight: .infinity)
         .background(GroupColors.color(for: group.position))
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .aspectRatio(4.8, contentMode: .fit)
