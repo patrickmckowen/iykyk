@@ -22,50 +22,68 @@ struct PuzzleLibraryView: View {
     @State private var showCreatePuzzle = false
     @ObserveInjection private var inject
     
-    private var displayedPuzzles: [Puzzle] {
-        switch mode {
-        case .create:
-            return puzzles
-        case .play:
-            return puzzles.filter { $0.isPublished }
-        }
-    }
-    
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // Main content
-            if displayedPuzzles.isEmpty {
-                EmptyStateView(mode: mode)
-            } else {
-                List {
-                    ForEach(displayedPuzzles) { puzzle in
-                        NavigationLink(value: puzzle) {
-                            PuzzleRowView(puzzle: puzzle, showPlayStatus: mode == .play)
-                        }
-                    }
-                    .onDelete(perform: mode == .create ? deletePuzzles : nil)
-                }
-                .listStyle(.plain)
-            }
-            
-            // Floating create button (only in Create mode)
+        ZStack {
             if mode == .create {
-                NavigationLink(value: "create") {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 56))
-                        .foregroundStyle(.tint)
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                }
-                .padding(24)
+                createModeBody
+            } else {
+                playModeBody
             }
         }
         .navigationTitle(mode == .create ? "Create" : "Play")
         .enableInjection()
     }
     
+    @ViewBuilder
+    private var createModeBody: some View {
+        ZStack(alignment: .bottomTrailing) {
+            if puzzles.isEmpty {
+                EmptyStateView(mode: .create)
+            } else {
+                List {
+                    ForEach(puzzles) { puzzle in
+                        NavigationLink(value: puzzle) {
+                            PuzzleRowView(puzzle: puzzle, showPlayStatus: false)
+                        }
+                    }
+                    .onDelete(perform: deletePuzzles)
+                }
+                .listStyle(.plain)
+            }
+            
+            NavigationLink(value: "create") {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(.tint)
+                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            }
+            .padding(24)
+        }
+    }
+    
+    private var publishedPuzzles: [Puzzle] {
+        puzzles.filter { $0.isPublished }
+    }
+    
+    @ViewBuilder
+    private var playModeBody: some View {
+        if publishedPuzzles.isEmpty {
+            EmptyStateView(mode: .play)
+        } else {
+            List {
+                ForEach(publishedPuzzles) { puzzle in
+                    NavigationLink(value: puzzle) {
+                        PuzzleRowView(puzzle: puzzle, showPlayStatus: true)
+                    }
+                }
+            }
+            .listStyle(.plain)
+        }
+    }
+    
     private func deletePuzzles(at offsets: IndexSet) {
         for index in offsets {
-            let puzzle = displayedPuzzles[index]
+            let puzzle = puzzles[index]
             modelContext.delete(puzzle)
         }
         

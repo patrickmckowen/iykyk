@@ -33,8 +33,9 @@ final class Puzzle {
     var createdAt: Date
     var publishedAt: Date?
     
-    // SwiftData requires raw values for enums, not the enum directly
-    private var playStatusRaw: String
+    // SwiftData requires raw values for enums with default values
+    // Must be internal (not private) for SwiftData to access it
+    var playStatusRaw: String = PuzzlePlayStatus.notStarted.rawValue
     
     @Relationship(deleteRule: .cascade, inverse: \PuzzleGroup.puzzle)
     var groups: [PuzzleGroup]
