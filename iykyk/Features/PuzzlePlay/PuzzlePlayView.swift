@@ -1,23 +1,20 @@
 //
-//  PuzzlePreviewView.swift
+//  PuzzlePlayView.swift
 //  iykyk
 //
-//  Created by AI on 11/22/25.
+//  Created by AI Assistant on 11/24/25.
 //
 
 import SwiftUI
-import UIKit
 import SwiftData
 import Inject
 
-struct PuzzlePreviewView: View {
-    let puzzle: Puzzle
+struct PuzzlePlayView: View {
+    @Bindable var puzzle: Puzzle
     
     @State private var playSession: PuzzlePlaySession?
-    @State private var validationIssues: [ValidationIssue] = []
     @State private var shakeAmount: CGFloat = 0
     @State private var shakingTileIDs: Set<UUID> = []
-    @State private var showPublishedBanner = false
     
     @Namespace private var tileNamespace
     @Environment(\.dismiss) private var dismiss
@@ -30,79 +27,12 @@ struct PuzzlePreviewView: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            // Published banner
-            if showPublishedBanner {
-                publishedBannerView
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-            
-            if let session = playSession {
-                // Game state indicator
-                if session.state != .inProgress {
-                    gameOverBanner(for: session.state)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                // Solved groups section
-                if !session.solvedTiles.isEmpty {
-                    solvedGroupsView(session: session)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                // Active tiles grid
-                LazyVGrid(columns: columns, spacing: 8) {
-                    ForEach(session.activeTiles) { tile in
-                        tileView(for: tile, session: session)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Controls
-                VStack(spacing: 16) {
-                    // Mistakes Remaining
-                    HStack(spacing: 8) {
-                        Text("Mistakes Remaining:")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        
-                        HStack(spacing: 6) {
-                            ForEach(0..<4) { index in
-                                Circle()
-                                    .fill(index < session.guessesRemaining ? Color.primary.opacity(0.6) : Color.secondary.opacity(0.2))
-                                    .frame(width: 12, height: 12)
-                            }
-                        }
-                    }
-                    .padding(.top, 8)
-                    
-                    // Action Buttons
-                    HStack(spacing: 12) {
-                        Button("Shuffle") {
-                            withAnimation {
-                                session.shuffle()
-                            }
-                        }
-                        .buttonStyle(CapsuleButtonStyle())
-                        
-                        Button("Deselect All") {
-                            session.clearSelection()
-                        }
-                        .buttonStyle(CapsuleButtonStyle())
-                        .disabled(session.selectedTileIDs.isEmpty)
-                        
-                        Button("Submit") {
-                            submitGuess()
-                        }
-                        .buttonStyle(CapsuleButtonStyle(isFilled: session.canSubmitGuess))
-                        .disabled(!session.canSubmitGuess)
-                    }
-                }
-                .padding(.horizontal)
-                
-                Spacer()
-            } else if !validationIssues.isEmpty {
-                // Validation errors
-                validationErrorsView
+            if puzzle.playStatus == .won || puzzle.playStatus == .lost {
+                // End state view - show completed puzzle
+                endStateView
+            } else if let session = playSession {
+                // Active gameplay
+                gameplayView(session: session)
             } else {
                 // Loading state
                 ProgressView()
@@ -110,16 +40,8 @@ struct PuzzlePreviewView: View {
             }
         }
         .padding(.top)
-        .navigationTitle("Preview")
+        .navigationTitle(puzzle.title)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(puzzle.isPublished ? "Published" : "Publish") {
-                    publishPuzzle()
-                }
-                .disabled(playSession == nil || puzzle.isPublished)
-            }
-        }
         .onAppear {
             initializePlaySession()
         }
@@ -127,16 +49,136 @@ struct PuzzlePreviewView: View {
     }
     
     private func initializePlaySession() {
-        // Validate puzzle first
-        validationIssues = PuzzleValidator.validate(puzzle)
-        
-        guard validationIssues.isEmpty else {
-            playSession = nil
+        // If already completed, don't create a new session
+        if puzzle.playStatus == .won || puzzle.playStatus == .lost {
             return
+        }
+        
+        // Mark as in progress if starting fresh
+        if puzzle.playStatus == .notStarted {
+            puzzle.playStatus = .inProgress
+            saveContext()
         }
         
         // Create play session
         playSession = PuzzlePlaySession(puzzle: puzzle)
+    }
+    
+    @ViewBuilder
+    private var endStateView: some View {
+        VStack(spacing: 16) {
+            // Result banner
+            resultBanner(for: puzzle.playStatus)
+            
+            // Show all groups in final state
+            VStack(spacing: 8) {
+                ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
+                    completedGroupRow(group: group)
+                }
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+        }
+    }
+    
+    @ViewBuilder
+    private func gameplayView(session: PuzzlePlaySession) -> some View {
+        // Game state indicator
+        if session.state != .inProgress {
+            gameOverBanner(for: session.state)
+                .transition(.move(edge: .top).combined(with: .opacity))
+        }
+        
+        // Solved groups section
+        if !session.solvedTiles.isEmpty {
+            solvedGroupsView(session: session)
+                .transition(.move(edge: .top).combined(with: .opacity))
+        }
+        
+        // Active tiles grid
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(session.activeTiles) { tile in
+                tileView(for: tile, session: session)
+            }
+        }
+        .padding(.horizontal)
+        
+        // Controls
+        VStack(spacing: 16) {
+            // Mistakes Remaining
+            HStack(spacing: 8) {
+                Text("Mistakes Remaining:")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 6) {
+                    ForEach(0..<4) { index in
+                        Circle()
+                            .fill(index < session.guessesRemaining ? Color.primary.opacity(0.6) : Color.secondary.opacity(0.2))
+                            .frame(width: 12, height: 12)
+                    }
+                }
+            }
+            .padding(.top, 8)
+            
+            // Action Buttons
+            HStack(spacing: 12) {
+                Button("Shuffle") {
+                    withAnimation {
+                        session.shuffle()
+                    }
+                }
+                .buttonStyle(CapsuleButtonStyle())
+                
+                Button("Deselect All") {
+                    session.clearSelection()
+                }
+                .buttonStyle(CapsuleButtonStyle())
+                .disabled(session.selectedTileIDs.isEmpty)
+                
+                Button("Submit") {
+                    submitGuess()
+                }
+                .buttonStyle(CapsuleButtonStyle(isFilled: session.canSubmitGuess))
+                .disabled(!session.canSubmitGuess)
+            }
+        }
+        .padding(.horizontal)
+        
+        Spacer()
+    }
+    
+    @ViewBuilder
+    private func resultBanner(for status: PuzzlePlayStatus) -> some View {
+        Group {
+            switch status {
+            case .won:
+                Text("🎉 You solved it!")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.green)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                
+            case .lost:
+                Text("Better luck next time!")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.red)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                
+            default:
+                EmptyView()
+            }
+        }
     }
     
     @ViewBuilder
@@ -172,43 +214,26 @@ struct PuzzlePreviewView: View {
     }
     
     @ViewBuilder
-    private var publishedBannerView: some View {
-        Text("✓ Puzzle Published")
-            .font(.subheadline)
-            .fontWeight(.semibold)
-            .foregroundStyle(.green)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity)
-            .background(Color.green.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .padding(.horizontal)
-    }
-    
-    private func publishPuzzle() {
-        guard !puzzle.isPublished else { return }
+    private func completedGroupRow(group: PuzzleGroup) -> some View {
+        let wordsList = group.words.map { $0.text }.joined(separator: ", ")
         
-        // Set publish metadata
-        puzzle.publishedAt = Date()
-        puzzle.playStatus = .notStarted
-        
-        // Save to SwiftData
-        do {
-            try modelContext.save()
+        VStack(spacing: 0) {
+            Text(group.title.uppercased())
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white)
             
-            // Show success banner briefly
-            withAnimation {
-                showPublishedBanner = true
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                withAnimation {
-                    showPublishedBanner = false
-                }
-            }
-        } catch {
-            print("Failed to publish puzzle: \(error)")
+            Text(wordsList)
+                .font(.system(size: 14))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 4)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 80)
+        .background(GroupColors.color(for: group.position))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     @ViewBuilder
@@ -260,42 +285,6 @@ struct PuzzlePreviewView: View {
         )
     }
     
-    @ViewBuilder
-    private var validationErrorsView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-            .font(.system(size: 60))
-            .foregroundStyle(.orange)
-            
-            Text("Puzzle Needs Fixes")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(validationIssues) { issue in
-                    HStack(alignment: .top) {
-                        Text("•")
-                        Text(issue.message)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding(.horizontal)
-            
-            Text("Please return to editing and complete all groups.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-    
     private func submitGuess() {
         // Capture the selected tile IDs before submitting
         guard let session = playSession else { return }
@@ -308,6 +297,12 @@ struct PuzzlePreviewView: View {
             // Animate solved group
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 // Animation happens via state change in session
+            }
+            
+            // Check if game is won and persist
+            if session.state == .won {
+                puzzle.playStatus = .won
+                saveContext()
             }
             
         case .incorrect:
@@ -328,6 +323,12 @@ struct PuzzlePreviewView: View {
                     // Apply penalty after shake completes
                     withAnimation {
                         session.applyIncorrectGuessPenalty()
+                        
+                        // Check if game is lost and persist
+                        if session.state == .lost {
+                            puzzle.playStatus = .lost
+                            saveContext()
+                        }
                     }
                 }
             }
@@ -363,67 +364,17 @@ struct PuzzlePreviewView: View {
         .modifier(ShakeEffect(amount: shouldShake ? shakeAmount : 0))
         .disabled(session.state != .inProgress)
     }
-}
-
-struct CapsuleButtonStyle: ButtonStyle {
-    var isFilled: Bool = false
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) private var colorScheme
     
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .padding(.vertical, 10)
-            .padding(.horizontal, 16)
-            .foregroundStyle(textColor)
-            .background(
-                Capsule()
-                    .fill(backgroundColor)
-            )
-            .overlay(
-                Capsule()
-                    .strokeBorder(borderColor, lineWidth: 1)
-            )
-            .opacity(configuration.isPressed ? 0.7 : 1)
-    }
-    
-    private var textColor: Color {
-        if isFilled {
-            return colorScheme == .dark ? .black : .white
+    private func saveContext() {
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save context: \(error)")
         }
-        return isEnabled ? .primary : .secondary
-    }
-    
-    private var backgroundColor: Color {
-        if isFilled {
-            return .primary
-        }
-        return .clear
-    }
-    
-    private var borderColor: Color {
-        if isFilled {
-            return .clear
-        }
-        return isEnabled ? .primary : .secondary.opacity(0.5)
     }
 }
 
-// MARK: - Shake Effect
-
-struct ShakeEffect: GeometryEffect {
-    var amount: CGFloat
-    
-    var animatableData: CGFloat {
-        get { amount }
-        set { amount = newValue }
-    }
-    
-    func effectValue(size: CGSize) -> ProjectionTransform {
-        let translation = sin(amount * .pi * 2) * 10
-        return ProjectionTransform(CGAffineTransform(translationX: translation, y: 0))
-    }
-}
+// MARK: - Supporting Views (reused from PuzzlePreviewView)
 
 private struct AutoSizingTileText: View {
     let text: String
@@ -501,6 +452,8 @@ private struct AutoSizingTileText: View {
 
 #Preview {
     NavigationStack {
-        PuzzlePreviewView(puzzle: PuzzleFixtures.sampleCompletedPuzzle())
+        PuzzlePlayView(puzzle: PuzzleFixtures.sampleCompletedPuzzle())
     }
+    .modelContainer(for: Puzzle.self, inMemory: true)
 }
+
