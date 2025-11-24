@@ -28,6 +28,13 @@ struct PuzzlePreviewView: View {
         Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
     }
     
+    private var navigationTitle: String {
+        if puzzle.isPublished, let number = puzzle.sequenceNumber {
+            return "Puzzle #\(number)"
+        }
+        return "Preview"
+    }
+    
     var body: some View {
         VStack(spacing: 8) {
             // Published banner
@@ -110,7 +117,7 @@ struct PuzzlePreviewView: View {
             }
         }
         .padding(.top)
-        .navigationTitle("Preview")
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
