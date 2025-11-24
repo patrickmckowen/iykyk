@@ -25,6 +25,13 @@ struct PuzzlePlayView: View {
         Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
     }
     
+    private var navigationTitle: String {
+        if let number = puzzle.sequenceNumber {
+            return "Puzzle #\(number)"
+        }
+        return "Puzzle"
+    }
+    
     var body: some View {
         VStack(spacing: 8) {
             if puzzle.playStatus == .won || puzzle.playStatus == .lost {
@@ -40,7 +47,7 @@ struct PuzzlePlayView: View {
             }
         }
         .padding(.top)
-        .navigationTitle(puzzle.title)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
