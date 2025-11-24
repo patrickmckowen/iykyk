@@ -14,7 +14,7 @@ struct RootView: View {
     
     var body: some View {
         TabView {
-            Tab("Create", systemImage: "scribble.variable") {
+            Tab("Create", systemImage: "highlighter") {
                 NavigationStack {
                     PuzzleLibraryView(mode: .create)
                         .navigationDestination(for: Puzzle.self) { puzzle in
@@ -32,7 +32,7 @@ struct RootView: View {
                 }
             }
             
-            Tab("Play", systemImage: "xmark.triangle.circle.square") {
+            Tab("Play", systemImage: "circle.square") {
                 NavigationStack {
                     PuzzleLibraryView(mode: .play)
                         .navigationDestination(for: Puzzle.self) { puzzle in
