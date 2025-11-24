@@ -31,40 +31,32 @@ struct PuzzleLibraryView: View {
             }
         }
         .navigationTitle(mode == .create ? "Create" : "Play")
+        .toolbar {
+            if mode == .create {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: "create") {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+        }
         .enableInjection()
     }
     
     @ViewBuilder
     private var createModeBody: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if puzzles.isEmpty {
-                EmptyStateView(mode: .create)
-            } else {
-                List {
-                    ForEach(puzzles) { puzzle in
-                        NavigationLink(value: puzzle) {
-                            PuzzleRowView(puzzle: puzzle, showPlayStatus: false)
-                        }
+        if puzzles.isEmpty {
+            EmptyStateView(mode: .create)
+        } else {
+            List {
+                ForEach(puzzles) { puzzle in
+                    NavigationLink(value: puzzle) {
+                        PuzzleRowView(puzzle: puzzle, showPlayStatus: false)
                     }
-                    .onDelete(perform: deletePuzzles)
                 }
-                .listStyle(.plain)
+                .onDelete(perform: deletePuzzles)
             }
-            
-            NavigationLink(value: "create") {
-                Image(systemName: "plus")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .frame(width: 64, height: 64)
-                    .background(.regularMaterial)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .strokeBorder(.white.opacity(0.2), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
-            }
-            .padding(24)
+            .listStyle(.plain)
         }
     }
     
@@ -115,7 +107,7 @@ struct EmptyStateView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text(mode == .create ? "Tap the + button to create your first puzzle" : "Publish a puzzle from Create mode to play it here")
+            Text(mode == .create ? "Tap the + button in the toolbar to create your first puzzle" : "Publish a puzzle from Create mode to play it here")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

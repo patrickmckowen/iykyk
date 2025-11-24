@@ -112,6 +112,7 @@ struct PuzzlePreviewView: View {
         .padding(.top)
         .navigationTitle("Preview")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(puzzle.isPublished ? "Published" : "Publish") {

@@ -75,6 +75,7 @@ struct PuzzleCreationView: View {
         )
         .navigationTitle(isNewPuzzle ? "New Puzzle" : "Edit Puzzle")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {

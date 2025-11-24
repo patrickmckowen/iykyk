@@ -42,6 +42,7 @@ struct PuzzlePlayView: View {
         .padding(.top)
         .navigationTitle(puzzle.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             initializePlaySession()
         }
