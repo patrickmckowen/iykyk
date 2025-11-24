@@ -52,10 +52,17 @@ struct PuzzleLibraryView: View {
             }
             
             NavigationLink(value: "create") {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.tint)
-                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                Image(systemName: "plus")
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .frame(width: 64, height: 64)
+                    .background(.regularMaterial)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .strokeBorder(.white.opacity(0.2), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
             }
             .padding(24)
         }
