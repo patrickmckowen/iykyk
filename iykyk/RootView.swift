@@ -32,7 +32,7 @@ struct RootView: View {
                 }
             }
             
-            Tab("Play", systemImage: "circle.square") {
+            Tab("Play", systemImage: "hand.rays") {
                 NavigationStack {
                     PuzzleLibraryView(mode: .play)
                         .navigationDestination(for: Puzzle.self) { puzzle in
