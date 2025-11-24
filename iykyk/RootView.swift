@@ -18,7 +18,11 @@ struct RootView: View {
                 NavigationStack {
                     PuzzleLibraryView(mode: .create)
                         .navigationDestination(for: Puzzle.self) { puzzle in
-                            PuzzleCreationView(puzzle: puzzle)
+                            if puzzle.isPublished {
+                                PuzzlePreviewView(puzzle: puzzle)
+                            } else {
+                                PuzzleCreationView(puzzle: puzzle)
+                            }
                         }
                         .navigationDestination(for: String.self) { value in
                             if value == "create" {
