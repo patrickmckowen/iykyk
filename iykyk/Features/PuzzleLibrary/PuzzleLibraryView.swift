@@ -9,50 +9,75 @@ import SwiftUI
 import SwiftData
 import Inject
 
+enum LibraryMode {
+    case create
+    case play
+}
+
 struct PuzzleLibraryView: View {
+    var mode: LibraryMode = .create
+    
     @Query(sort: \Puzzle.createdAt, order: .reverse) private var puzzles: [Puzzle]
     @Environment(\.modelContext) private var modelContext
     @State private var showCreatePuzzle = false
     @ObserveInjection private var inject
     
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                // Main content
-                if puzzles.isEmpty {
-                    EmptyStateView()
-                } else {
-                    List {
-                        ForEach(puzzles) { puzzle in
-                            NavigationLink(value: puzzle) {
-                                PuzzleRowView(puzzle: puzzle)
-                            }
-                        }
-                        .onDelete(perform: deletePuzzles)
+        ZStack {
+            if mode == .create {
+                createModeBody
+            } else {
+                playModeBody
+            }
+        }
+        .navigationTitle(mode == .create ? "Create" : "Play")
+        .toolbar {
+            if mode == .create {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: "create") {
+                        Image(systemName: "plus")
                     }
-                    .listStyle(.plain)
-                }
-                
-                // Floating create button
-                NavigationLink(value: "create") {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 56))
-                        .foregroundStyle(.tint)
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                }
-                .padding(24)
-            }
-            .navigationTitle("iykyk")
-            .navigationDestination(for: Puzzle.self) { puzzle in
-                PuzzleCreationView(puzzle: puzzle)
-            }
-            .navigationDestination(for: String.self) { value in
-                if value == "create" {
-                    PuzzleCreationView()
                 }
             }
         }
         .enableInjection()
+    }
+    
+    @ViewBuilder
+    private var createModeBody: some View {
+        if puzzles.isEmpty {
+            EmptyStateView(mode: .create)
+        } else {
+            List {
+                ForEach(puzzles) { puzzle in
+                    NavigationLink(value: puzzle) {
+                        PuzzleRowView(puzzle: puzzle, showPlayStatus: false)
+                    }
+                }
+                .onDelete(perform: deletePuzzles)
+            }
+            .listStyle(.plain)
+        }
+    }
+    
+    private var publishedPuzzles: [Puzzle] {
+        puzzles.filter { $0.isPublished }
+    }
+    
+    @ViewBuilder
+    private var playModeBody: some View {
+        if publishedPuzzles.isEmpty {
+            EmptyStateView(mode: .play)
+        } else {
+            List {
+                ForEach(publishedPuzzles) { puzzle in
+                    NavigationLink(value: puzzle) {
+                        PuzzleRowView(puzzle: puzzle, showPlayStatus: true)
+                    }
+                }
+            }
+            .listStyle(.plain)
+        }
     }
     
     private func deletePuzzles(at offsets: IndexSet) {
@@ -70,17 +95,19 @@ struct PuzzleLibraryView: View {
 }
 
 struct EmptyStateView: View {
+    var mode: LibraryMode = .create
+    
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "square.grid.4x4")
                 .font(.system(size: 60))
                 .foregroundStyle(.secondary)
             
-            Text("No Puzzles Yet")
+            Text(mode == .create ? "No Puzzles Yet" : "No Published Puzzles")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Tap the + button to create your first puzzle")
+            Text(mode == .create ? "Tap the + button in the toolbar to create your first puzzle" : "Publish a puzzle from Create mode to play it here")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -92,6 +119,7 @@ struct EmptyStateView: View {
 
 struct PuzzleRowView: View {
     let puzzle: Puzzle
+    var showPlayStatus: Bool = false
     
     private var sequenceText: String {
         if let number = puzzle.sequenceNumber, number > 0 {
@@ -115,9 +143,21 @@ struct PuzzleRowView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(sequenceText)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(sequenceText)
+                    .font(.headline)
+                
+                // Status capsule
+                Text(showPlayStatus ? puzzle.playStatus.displayText : puzzle.publishStatusText)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(statusColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(statusColor.opacity(0.15))
+                    .clipShape(Capsule())
+            }
             
             HStack {
                 Text("\(wordCount)/16 words")
@@ -132,6 +172,19 @@ struct PuzzleRowView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+    
+    private var statusColor: Color {
+        if showPlayStatus {
+            switch puzzle.playStatus {
+            case .notStarted: return .blue
+            case .inProgress: return .orange
+            case .won: return .green
+            case .lost: return .red
+            }
+        } else {
+            return puzzle.isPublished ? .green : .secondary
+        }
     }
 }
 

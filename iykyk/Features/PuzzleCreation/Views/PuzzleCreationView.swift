@@ -62,6 +62,7 @@ struct PuzzleCreationView: View {
                 .padding(.bottom, 100) // Space for bottom actions
             }
             .scrollDismissesKeyboard(.interactively)
+            .disabled(puzzle.isPublished)
             
             Spacer()
         }
@@ -75,6 +76,7 @@ struct PuzzleCreationView: View {
         )
         .navigationTitle(isNewPuzzle ? "New Puzzle" : "Edit Puzzle")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {
