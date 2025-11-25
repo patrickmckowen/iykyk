@@ -203,7 +203,12 @@ Guidelines:
 ```
 iykyk/
 ├── Core/
-│   ├── DesignSystem/     # Shared UI constants (colors, difficulty labels)
+│   ├── DesignSystem/
+│   │   ├── Components/   # Shared UI components (AutoSizingTileText, SolvedGroupRow, etc.)
+│   │   ├── Effects/      # Animation effects (ShakeEffect)
+│   │   ├── Styles/       # Button styles (CapsuleButtonStyle)
+│   │   ├── GroupColors.swift
+│   │   └── GroupDifficulty.swift
 │   ├── Extensions/       # Swift type extensions (e.g., String+Extensions)
 │   ├── Models/           # Domain models (Puzzle, PuzzleGroup, PuzzleWord, etc.)
 │   ├── Persistence/      # Repository protocol + implementations
@@ -211,9 +216,15 @@ iykyk/
 │
 ├── Features/
 │   ├── PuzzleCreation/
-│   │   └── Views/        # PuzzleCreationView, GroupRowView, EditableWordTile, PuzzlePreviewView
-│   ├── PuzzleLibrary/    # PuzzleLibraryView
-│   └── PuzzlePlay/       # PuzzlePlayView
+│   │   ├── Views/        # PuzzleCreationView, PuzzlePreviewView
+│   │   ├── Components/   # EditableWordTile, GroupRowView
+│   │   └── Models/       # PuzzleCreationFocusField
+│   ├── PuzzleLibrary/
+│   │   ├── Views/        # PuzzleLibraryView
+│   │   ├── Components/   # PuzzleRowView, EmptyStateView
+│   │   └── Models/       # LibraryMode
+│   └── PuzzlePlay/
+│       └── Views/        # PuzzlePlayView
 │
 ├── docs/
 │   ├── AGENTS.md         # This file (high-level context)
@@ -231,8 +242,13 @@ iykyk/
 | Domain model | `Core/Models/` | `Puzzle.swift` |
 | SwiftData repository | `Core/Persistence/` | `SwiftDataPuzzleRepository.swift` |
 | Validation / business logic | `Core/Services/` | `PuzzleValidator.swift` |
+| Shared UI component | `Core/DesignSystem/Components/` | `AutoSizingTileText.swift` |
+| Shared button style | `Core/DesignSystem/Styles/` | `CapsuleButtonStyle.swift` |
+| Shared animation effect | `Core/DesignSystem/Effects/` | `ShakeEffect.swift` |
 | UI constants (colors, fonts) | `Core/DesignSystem/` | `GroupColors.swift` |
-| Feature view | `Features/{FeatureName}/Views/` | `PuzzleCreationView.swift` |
+| Feature screen | `Features/{FeatureName}/Views/` | `PuzzleCreationView.swift` |
+| Feature-specific component | `Features/{FeatureName}/Components/` | `EditableWordTile.swift` |
+| Feature-specific model/enum | `Features/{FeatureName}/Models/` | `PuzzleCreationFocusField.swift` |
 | Shared Swift extensions | `Core/Extensions/` | `String+Extensions.swift` |
 
 ### 11.2 Naming Conventions
@@ -246,7 +262,27 @@ iykyk/
 ### 11.3 Adding a New Feature
 
 1. Create a folder under `Features/{FeatureName}/`
-2. Add a `Views/` subfolder for SwiftUI views
-3. If the feature needs new models, add them to `Core/Models/`
-4. Wire navigation in `RootView.swift` or the appropriate parent view
-5. Add Inject support to new views for hot reloading (see Section 10.2)
+2. Add a `Views/` subfolder for main screens
+3. Add a `Components/` subfolder for feature-specific reusable components
+4. Add a `Models/` subfolder for feature-specific enums or models (if needed)
+5. If the feature needs shared domain models, add them to `Core/Models/`
+6. If the feature needs shared UI components, add them to `Core/DesignSystem/Components/`
+7. Wire navigation in `RootView.swift` or the appropriate parent view
+8. Add Inject support to new views for hot reloading (see Section 10.2)
+
+### 11.4 Shared DesignSystem Components
+
+The following shared components are available in `Core/DesignSystem/`:
+
+**Components:**
+- `AutoSizingTileText` – Text that auto-sizes to fit within a container
+- `SolvedGroupRow` – Displays a solved group with title and words
+- `GameTileButton` – Interactive tile button for gameplay
+- `MistakesRemainingView` – Shows remaining incorrect guesses
+- `GameControlsView` – Shuffle/Deselect All/Submit button row
+
+**Styles:**
+- `CapsuleButtonStyle` – Capsule-shaped button style for game controls
+
+**Effects:**
+- `ShakeEffect` – Horizontal shake animation for incorrect guesses
