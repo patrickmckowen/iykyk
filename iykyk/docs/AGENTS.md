@@ -196,3 +196,57 @@ Guidelines:
 - Put `.enableInjection()` as far out as possible in the view hierarchy (usually on the root container, like a `NavigationStack`, `VStack`, or `ZStack`).
 - Child views nested under an instrumented parent will still participate in injection when you edit them, but for frequently edited leaf views it can be useful to wire them up directly as well.
 - Keep this strictly as a **development tool**; do not rely on Inject for any production behavior.
+
+---
+## 11. Project Structure
+
+```
+iykyk/
+├── Core/
+│   ├── DesignSystem/     # Shared UI constants (colors, difficulty labels)
+│   ├── Extensions/       # Swift type extensions (e.g., String+Extensions)
+│   ├── Models/           # Domain models (Puzzle, PuzzleGroup, PuzzleWord, etc.)
+│   ├── Persistence/      # Repository protocol + implementations
+│   └── Services/         # Validation, fixtures, numbering, utilities
+│
+├── Features/
+│   ├── PuzzleCreation/
+│   │   └── Views/        # PuzzleCreationView, GroupRowView, EditableWordTile, PuzzlePreviewView
+│   ├── PuzzleLibrary/    # PuzzleLibraryView
+│   └── PuzzlePlay/       # PuzzlePlayView
+│
+├── docs/
+│   ├── AGENTS.md         # This file (high-level context)
+│   └── PUZZLE.md         # Detailed puzzle implementation reference
+│
+├── Resources/            # Asset catalogs, etc.
+├── iykykApp.swift        # App entry point, ModelContainer setup
+└── RootView.swift        # Root TabView navigation
+```
+
+### 11.1 Where to Put New Code
+
+| Type | Location | Example |
+|------|----------|---------|
+| Domain model | `Core/Models/` | `Puzzle.swift` |
+| SwiftData repository | `Core/Persistence/` | `SwiftDataPuzzleRepository.swift` |
+| Validation / business logic | `Core/Services/` | `PuzzleValidator.swift` |
+| UI constants (colors, fonts) | `Core/DesignSystem/` | `GroupColors.swift` |
+| Feature view | `Features/{FeatureName}/Views/` | `PuzzleCreationView.swift` |
+| Shared Swift extensions | `Core/Extensions/` | `String+Extensions.swift` |
+
+### 11.2 Naming Conventions
+
+- **Files** match the primary type they contain: `PuzzleValidator.swift` → `struct PuzzleValidator`
+- **Views** end with `View`: `PuzzleCreationView`, `GroupRowView`
+- **Repositories** end with `Repository`: `InMemoryPuzzleRepository`
+- **Extensions** use `TypeName+Extensions.swift` format
+- **Test files** use `TypeNameTests.swift` format
+
+### 11.3 Adding a New Feature
+
+1. Create a folder under `Features/{FeatureName}/`
+2. Add a `Views/` subfolder for SwiftUI views
+3. If the feature needs new models, add them to `Core/Models/`
+4. Wire navigation in `RootView.swift` or the appropriate parent view
+5. Add Inject support to new views for hot reloading (see Section 10.2)
