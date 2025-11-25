@@ -12,17 +12,13 @@ import Inject
 struct PuzzlePreviewView: View {
     @Bindable var puzzle: Puzzle
     
-    @State private var titleText: String = ""
     @State private var shuffledWords: [PuzzleWord] = []
     @State private var validationIssues: [ValidationIssue] = []
     @State private var tilesVisible: Bool = false
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @FocusState private var isTitleFocused: Bool
     @ObserveInjection private var inject
-    
-    private let titleCharacterLimit = 50
     
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
@@ -30,28 +26,28 @@ struct PuzzlePreviewView: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            if validationIssues.isEmpty {
-                // Title section
-                titleSection
-                
-                Spacer()
-                
-                // Static preview grid
-                previewGrid
-                
-                Spacer()
-                
-                // Bottom section
-                if puzzle.isPublished {
-                    publishedBadge
-                        .padding(.bottom, 32)
-                } else {
-                    publishButton
-                        .padding(.bottom, 32)
-                }
+            // Title for published puzzles
+            if puzzle.isPublished, let number = puzzle.sequenceNumber {
+                Text("Puzzle #\(number)")
+                    .font(.title.bold())
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.primary)
+            }
+            
+            Spacer()
+            
+            // Always show the preview grid
+            previewGrid
+            
+            Spacer()
+            
+            // Bottom section
+            if puzzle.isPublished {
+                publishedBadge
+                    .padding(.bottom, 32)
             } else {
-                // Validation errors
-                validationErrorsView
+                publishButton
+                    .padding(.bottom, 32)
             }
         }
         .padding(.horizontal)
@@ -59,53 +55,10 @@ struct PuzzlePreviewView: View {
         .navigationTitle(puzzle.isPublished ? "Published" : "Preview")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isTitleFocused = false
-        }
         .onAppear {
             initializePreview()
         }
         .enableInjection()
-    }
-    
-    // MARK: - Title Section
-    
-    @ViewBuilder
-    private var titleSection: some View {
-        VStack(spacing: 8) {
-            if puzzle.isPublished {
-                // Read-only title for published puzzles
-                Text(puzzle.displayTitle)
-                    .font(.title.bold())
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.primary)
-            } else {
-                // Editable title for unpublished puzzles
-                TextField("Enter a title...", text: $titleText)
-                    .font(.title.bold())
-                    .multilineTextAlignment(.center)
-                    .textFieldStyle(.plain)
-                    .focused($isTitleFocused)
-                    .onChange(of: titleText) { _, newValue in
-                        // Enforce character limit
-                        if newValue.count > titleCharacterLimit {
-                            titleText = String(newValue.prefix(titleCharacterLimit))
-                        }
-                        // Sync to model
-                        puzzle.title = titleText
-                    }
-                
-                // Character count (show when approaching limit)
-                if titleText.count > titleCharacterLimit - 10 {
-                    Text("\(titleText.count)/\(titleCharacterLimit)")
-                        .font(.caption)
-                        .foregroundStyle(titleText.count >= titleCharacterLimit ? .orange : .secondary)
-                        .transition(.opacity)
-                }
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: titleText.count > titleCharacterLimit - 10)
     }
     
     // MARK: - Preview Grid
@@ -130,13 +83,18 @@ struct PuzzlePreviewView: View {
     
     @ViewBuilder
     private var publishButton: some View {
+        let isValid = validationIssues.isEmpty
+        
         Button {
-            publishPuzzle()
+            if isValid {
+                publishPuzzle()
+            }
         } label: {
-            Text("Publish")
+            Text(isValid ? "Publish" : "Complete all groups to publish")
                 .frame(minWidth: 120)
         }
-        .buttonStyle(CapsuleButtonStyle(isFilled: true))
+        .buttonStyle(CapsuleButtonStyle(isFilled: isValid))
+        .disabled(!isValid)
     }
     
     // MARK: - Published Badge
@@ -153,54 +111,13 @@ struct PuzzlePreviewView: View {
         .foregroundStyle(.secondary)
     }
     
-    // MARK: - Validation Errors
-    
-    @ViewBuilder
-    private var validationErrorsView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange)
-            
-            Text("Puzzle Needs Fixes")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(validationIssues) { issue in
-                    HStack(alignment: .top) {
-                        Text("•")
-                        Text(issue.message)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            Text("Please return to editing and complete all groups.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-    
     // MARK: - Actions
     
     private func initializePreview() {
-        // Validate puzzle first
+        // Validate puzzle
         validationIssues = PuzzleValidator.validate(puzzle)
         
-        guard validationIssues.isEmpty else { return }
-        
-        // Initialize title from puzzle
-        titleText = puzzle.title == "New Puzzle" ? "" : puzzle.title
-        
-        // Collect all words and shuffle
+        // Collect all words and shuffle (include empty words for preview)
         let allWords = puzzle.groups.flatMap { $0.words }
         shuffledWords = allWords.shuffled()
         
@@ -213,15 +130,10 @@ struct PuzzlePreviewView: View {
     private func publishPuzzle() {
         guard !puzzle.isPublished else { return }
         
-        // If title is empty, set default based on sequence number
-        if titleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let sequenceNumber = PuzzleNumberingService.nextSequenceNumber()
-            puzzle.sequenceNumber = sequenceNumber
-            puzzle.title = "Puzzle #\(sequenceNumber)"
-        } else {
-            puzzle.sequenceNumber = PuzzleNumberingService.nextSequenceNumber()
-            puzzle.title = titleText
-        }
+        // Assign sequence number and set title
+        let sequenceNumber = PuzzleNumberingService.nextSequenceNumber()
+        puzzle.sequenceNumber = sequenceNumber
+        puzzle.title = "Puzzle #\(sequenceNumber)"
         
         // Set publish metadata
         puzzle.publishedAt = Date()
@@ -231,12 +143,8 @@ struct PuzzlePreviewView: View {
         do {
             try modelContext.save()
             
-            // Post notification for success banner
-            NotificationCenter.default.post(
-                name: .puzzlePublished,
-                object: nil,
-                userInfo: ["puzzleTitle": puzzle.displayTitle]
-            )
+            // Post notification to pop navigation to root
+            NotificationCenter.default.post(name: .puzzlePublished, object: nil)
             
             // Dismiss back to root
             dismiss()
