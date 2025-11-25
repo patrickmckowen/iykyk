@@ -14,7 +14,6 @@ struct PuzzleLibraryView: View {
     
     @Query(sort: \Puzzle.createdAt, order: .reverse) private var puzzles: [Puzzle]
     @Environment(\.modelContext) private var modelContext
-    @State private var showCreatePuzzle = false
     @ObserveInjection private var inject
     
     var body: some View {
@@ -43,15 +42,25 @@ struct PuzzleLibraryView: View {
         if puzzles.isEmpty {
             EmptyStateView(mode: .create)
         } else {
-            List {
-                ForEach(puzzles) { puzzle in
-                    NavigationLink(value: puzzle) {
-                        PuzzleRowView(puzzle: puzzle, showPlayStatus: false)
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(puzzles) { puzzle in
+                        NavigationLink(value: puzzle) {
+                            PuzzleCard(puzzle: puzzle, showPlayStatus: false)
+                        }
+                        .buttonStyle(PuzzleCardButtonStyle())
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                deletePuzzle(puzzle)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
-                .onDelete(perform: deletePuzzles)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
-            .listStyle(.plain)
         }
     }
     
@@ -64,22 +73,23 @@ struct PuzzleLibraryView: View {
         if publishedPuzzles.isEmpty {
             EmptyStateView(mode: .play)
         } else {
-            List {
-                ForEach(publishedPuzzles) { puzzle in
-                    NavigationLink(value: puzzle) {
-                        PuzzleRowView(puzzle: puzzle, showPlayStatus: true)
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(publishedPuzzles) { puzzle in
+                        NavigationLink(value: puzzle) {
+                            PuzzleCard(puzzle: puzzle, showPlayStatus: true)
+                        }
+                        .buttonStyle(PuzzleCardButtonStyle())
                     }
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
-            .listStyle(.plain)
         }
     }
     
-    private func deletePuzzles(at offsets: IndexSet) {
-        for index in offsets {
-            let puzzle = puzzles[index]
-            modelContext.delete(puzzle)
-        }
+    private func deletePuzzle(_ puzzle: Puzzle) {
+        modelContext.delete(puzzle)
         
         do {
             try modelContext.save()
@@ -95,4 +105,3 @@ struct PuzzleLibraryView: View {
     }
     .modelContainer(try! PreviewSampleData.seededContainer())
 }
-

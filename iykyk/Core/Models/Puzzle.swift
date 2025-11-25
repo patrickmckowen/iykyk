@@ -63,6 +63,45 @@ final class Puzzle {
         isPublished && (playStatus == .notStarted || playStatus == .inProgress)
     }
     
+    /// Returns all non-empty words as a title-cased preview string, or "Empty Puzzle" if none.
+    /// The UI will truncate naturally based on available space.
+    var wordPreview: String {
+        let allWords = groups
+            .sorted { $0.position < $1.position }
+            .flatMap { $0.words.sorted { $0.position < $1.position } }
+            .map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .map { $0.capitalized }
+        
+        if allWords.isEmpty {
+            return "Empty Puzzle"
+        }
+        
+        return allWords.joined(separator: ", ")
+    }
+    
+    /// Count of non-empty words in the puzzle (0-16).
+    var filledWordCount: Int {
+        groups
+            .flatMap { $0.words }
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .count
+    }
+    
+    /// Returns a set of group positions (0-3) where all 4 words are filled.
+    var completedGroupPositions: Set<Int> {
+        var completed = Set<Int>()
+        for group in groups {
+            let filledCount = group.words.filter {
+                !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            if filledCount == 4 {
+                completed.insert(group.position)
+            }
+        }
+        return completed
+    }
+    
     init(
         id: UUID = UUID(),
         sequenceNumber: Int? = nil,
