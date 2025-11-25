@@ -63,6 +63,25 @@ final class Puzzle {
         isPublished && (playStatus == .notStarted || playStatus == .inProgress)
     }
     
+    /// Returns the display title for the puzzle.
+    /// Uses custom title if set, otherwise generates "Puzzle #X" from sequence number.
+    var displayTitle: String {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Use custom title if it's not empty and not the default
+        if !trimmedTitle.isEmpty && trimmedTitle != "New Puzzle" {
+            return trimmedTitle
+        }
+        
+        // Fall back to "Puzzle #X" format
+        if let number = sequenceNumber {
+            return "Puzzle #\(number)"
+        }
+        
+        // Draft puzzles without a custom title
+        return "New Puzzle"
+    }
+    
     init(
         id: UUID = UUID(),
         sequenceNumber: Int? = nil,
