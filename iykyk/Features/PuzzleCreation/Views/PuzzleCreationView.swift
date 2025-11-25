@@ -9,11 +9,6 @@ import SwiftUI
 import SwiftData
 import Inject
 
-enum PuzzleCreationFocusField: Hashable {
-    case groupName(groupIndex: Int)
-    case word(groupIndex: Int, wordIndex: Int)
-}
-
 struct PuzzleCreationView: View {
     @Bindable var puzzle: Puzzle
     @Environment(\.modelContext) private var modelContext
@@ -39,14 +34,6 @@ struct PuzzleCreationView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            NavigationLink(
-                destination: PuzzlePreviewView(puzzle: puzzle),
-                isActive: $isShowingPreview
-            ) {
-                EmptyView()
-            }
-            .hidden()
-
             // Flexible scrollable content
             ScrollView {
                 VStack(spacing: 16) {
@@ -77,6 +64,9 @@ struct PuzzleCreationView: View {
         .navigationTitle(isNewPuzzle ? "New Puzzle" : "Edit Puzzle")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $isShowingPreview) {
+            PuzzlePreviewView(puzzle: puzzle)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {

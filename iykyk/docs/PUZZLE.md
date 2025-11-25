@@ -168,7 +168,9 @@ protocol PuzzleRepository {
 
 ### 6.1 PuzzleLibraryView
 
-`mode: LibraryMode` – `.create` or `.play`
+Location: `Features/PuzzleLibrary/Views/PuzzleLibraryView.swift`
+
+`mode: LibraryMode` (defined in `Features/PuzzleLibrary/Models/`) – `.create` or `.play`
 
 Uses `@Query(sort: \Puzzle.createdAt, order: .reverse)` to load all puzzles.
 
@@ -190,9 +192,15 @@ Uses `@Query(sort: \Puzzle.createdAt, order: .reverse)` to load all puzzles.
 
 ### 6.4 Empty States
 
-`EmptyStateView(mode:)`:
+`EmptyStateView(mode:)` (located in `Features/PuzzleLibrary/Components/`):
 - `.create`: "No Puzzles Yet" with hint to tap `+`.
 - `.play`: "No Published Puzzles" with hint to publish from Create mode.
+
+### 6.5 PuzzleRowView
+
+Location: `Features/PuzzleLibrary/Components/PuzzleRowView.swift`
+
+Displays a puzzle row in the library list with sequence number, status capsule, word count, and creation date.
 
 ---
 
@@ -221,7 +229,7 @@ Uses `@Query(sort: \Puzzle.createdAt, order: .reverse)` to load all puzzles.
 
 ### 7.2 Focus & Keyboard
 
-Uses `@FocusState` with `PuzzleCreationFocusField`:
+Uses `@FocusState` with `PuzzleCreationFocusField` (defined in `Features/PuzzleCreation/Models/`):
 - `.groupName(groupIndex:)`
 - `.word(groupIndex:, wordIndex:)`
 
@@ -233,6 +241,8 @@ Uses `@FocusState` with `PuzzleCreationFocusField`:
 - `.scrollDismissesKeyboard(.interactively)` for natural keyboard avoidance.
 
 ### 7.3 GroupRowView
+
+Location: `Features/PuzzleCreation/Components/GroupRowView.swift`
 
 `@Bindable var group: PuzzleGroup`
 
@@ -246,6 +256,8 @@ Uses `@FocusState` with `PuzzleCreationFocusField`:
 - Each tile is bound to the underlying `PuzzleWord.text`.
 
 ### 7.4 EditableWordTile
+
+Location: `Features/PuzzleCreation/Components/EditableWordTile.swift`
 
 Inline `TextField("WORD", text: $text, axis: .vertical)` styled as a square tile.
 
@@ -277,10 +289,10 @@ Inline `TextField("WORD", text: $text, axis: .vertical)` styled as a square tile
 If validation passes:
 - Initializes `PuzzlePlaySession(puzzle:)`.
 - Shows:
-  - Solved groups area (colored cards with `group.title` + words).
-  - 4×4 grid of active tiles (`session.activeTiles`) as tappable buttons with `AutoSizingTileText`.
-  - Controls: `Shuffle`, `Deselect All`, `Submit`.
-  - "Mistakes Remaining" row of 4 dots (starts at 4, one removed per incorrect guess).
+  - Solved groups area using `SolvedGroupRow` (from `Core/DesignSystem/Components/`).
+  - 4×4 grid of active tiles using `GameTileButton` (from `Core/DesignSystem/Components/`).
+  - Controls: `GameControlsView` for Shuffle/Deselect All/Submit buttons.
+  - `MistakesRemainingView` showing 4 dots (starts at 4, one removed per incorrect guess).
 - `Submit` is enabled when exactly 4 tiles are selected and session is in progress.
 
 **Guess handling:**
@@ -318,11 +330,11 @@ Top-right `Publish` / `Published` button:
 
 ### 9.3 Gameplay UI
 
-Similar to `PuzzlePreviewView`:
-- Solved groups section using `session.solvedTiles` and `session.solvedGroupIDs`.
-- 4×4 grid of active tiles using `WordTile` + `AutoSizingTileText`.
-- Controls: `Shuffle`, `Deselect All`, `Submit`.
-- "Mistakes Remaining" indicator (starts at 4).
+Similar to `PuzzlePreviewView`, using shared components from `Core/DesignSystem/`:
+- Solved groups section using `SolvedGroupRow`.
+- 4×4 grid of active tiles using `GameTileButton`.
+- Controls: `GameControlsView` for Shuffle/Deselect All/Submit buttons.
+- `MistakesRemainingView` indicator (starts at 4).
 
 **Guess logic:**
 - Delegates to `PuzzlePlaySession` (`toggleSelection`, `submitGuess`, `applyIncorrectGuessPenalty`).
@@ -401,12 +413,30 @@ Derived from a `Puzzle`:
 
 The following views are wired with **Inject** for hot reloading during development:
 
-- `RootView`
-- `PuzzleLibraryView`
-- `PuzzleCreationView`
-- `GroupRowView`
-- `EditableWordTile`
-- `PuzzlePreviewView`
-- `PuzzlePlayView`
+- `RootView` (root)
+- `PuzzleLibraryView` (`Features/PuzzleLibrary/Views/`)
+- `PuzzleCreationView` (`Features/PuzzleCreation/Views/`)
+- `PuzzlePreviewView` (`Features/PuzzleCreation/Views/`)
+- `GroupRowView` (`Features/PuzzleCreation/Components/`)
+- `EditableWordTile` (`Features/PuzzleCreation/Components/`)
+- `PuzzlePlayView` (`Features/PuzzlePlay/Views/`)
 
 See `AGENTS.md` section 10 for setup instructions.
+
+---
+
+## 13. Shared DesignSystem Components
+
+The following shared components in `Core/DesignSystem/` are used across play and preview views:
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `AutoSizingTileText` | `Components/` | Auto-sizing text for puzzle tiles |
+| `SolvedGroupRow` | `Components/` | Displays a solved group with title and words |
+| `GameTileButton` | `Components/` | Interactive tile button for gameplay |
+| `MistakesRemainingView` | `Components/` | Shows remaining incorrect guesses |
+| `GameControlsView` | `Components/` | Shuffle/Deselect All/Submit button row |
+| `CapsuleButtonStyle` | `Styles/` | Capsule-shaped button style |
+| `ShakeEffect` | `Effects/` | Horizontal shake animation for incorrect guesses |
+
+These shared components ensure consistent UI across `PuzzlePreviewView` and `PuzzlePlayView` while eliminating code duplication.
