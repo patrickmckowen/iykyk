@@ -47,5 +47,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .modelContainer(for: Puzzle.self, inMemory: true)
+        .modelContainer(try! PreviewSampleData.seededContainer())
 }
