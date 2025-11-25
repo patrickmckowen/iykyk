@@ -91,8 +91,8 @@ struct PuzzleLibraryView: View {
 
 #Preview {
     NavigationStack {
-        PuzzleLibraryView()
+        PuzzleLibraryView(mode: .create)
     }
-    .modelContainer(for: Puzzle.self, inMemory: true)
+    .modelContainer(try! PreviewSampleData.seededContainer())
 }
 

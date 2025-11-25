@@ -107,5 +107,60 @@ struct PuzzleFixtures {
             groups: [group0, group1, group2, group3]
         )
     }
+    
+    /// Creates a published puzzle with a specific play status
+    /// - Parameters:
+    ///   - playStatus: The play status for the puzzle (default: .notStarted)
+    ///   - sequenceNumber: Optional sequence number for display
+    /// - Returns: A fully valid, published puzzle
+    static func samplePublishedPuzzle(
+        playStatus: PuzzlePlayStatus = .notStarted,
+        sequenceNumber: Int? = nil
+    ) -> Puzzle {
+        // Group 0 - Colors
+        let group0Words = [
+            PuzzleWord(text: "CRIMSON", position: 0),
+            PuzzleWord(text: "SCARLET", position: 1),
+            PuzzleWord(text: "RUBY", position: 2),
+            PuzzleWord(text: "VERMILLION", position: 3)
+        ]
+        let group0 = PuzzleGroup(title: "Shades of Red", position: 0, words: group0Words)
+        
+        // Group 1 - Trees
+        let group1Words = [
+            PuzzleWord(text: "OAK", position: 0),
+            PuzzleWord(text: "MAPLE", position: 1),
+            PuzzleWord(text: "BIRCH", position: 2),
+            PuzzleWord(text: "WILLOW", position: 3)
+        ]
+        let group1 = PuzzleGroup(title: "Types of Trees", position: 1, words: group1Words)
+        
+        // Group 2 - Planets
+        let group2Words = [
+            PuzzleWord(text: "MARS", position: 0),
+            PuzzleWord(text: "VENUS", position: 1),
+            PuzzleWord(text: "SATURN", position: 2),
+            PuzzleWord(text: "JUPITER", position: 3)
+        ]
+        let group2 = PuzzleGroup(title: "Planets", position: 2, words: group2Words)
+        
+        // Group 3 - Card Games
+        let group3Words = [
+            PuzzleWord(text: "POKER", position: 0),
+            PuzzleWord(text: "BRIDGE", position: 1),
+            PuzzleWord(text: "RUMMY", position: 2),
+            PuzzleWord(text: "SOLITAIRE", position: 3)
+        ]
+        let group3 = PuzzleGroup(title: "Card Games", position: 3, words: group3Words)
+        
+        return Puzzle(
+            sequenceNumber: sequenceNumber,
+            title: "Nature & Games",
+            creatorName: "Preview",
+            publishedAt: Date(),
+            playStatus: playStatus,
+            groups: [group0, group1, group2, group3]
+        )
+    }
 }
 
