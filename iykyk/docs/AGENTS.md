@@ -51,7 +51,7 @@ For the **current phase**, we are focused primarily on the **Create** part of th
 - Building a **minimal iOS SwiftUI app** targeting the latest iOS SDK.
 - Implementing a **4×4 puzzle data model** (4 groups × 4 words).
 - Implementing **local-only persistence** (SwiftData) so puzzles survive restarts.
-- Implementing the **puzzle creation and play flows** (see `/docs/PUZZLE.md`).
+- Implementing the **puzzle creation and play flows** (see `PUZZLE.md`).
 
 #### Out of Scope (for now)
 
@@ -100,97 +100,28 @@ For the **current phase**, we are focused primarily on the **Create** part of th
   - **StoreKit** – if we add IAP or subscriptions.
 
 ---
-## 7. Core Domain Model
+## 7. Domain Model Overview
 
-We model a single iykyk puzzle with a hard 4×4 constraint. See `/docs/PUZZLE.md` for full details; this section is a high-level overview.
+We model a single iykyk puzzle with a hard 4×4 constraint:
 
-### 7.1 Entities
+- **Puzzle** – The top-level entity containing metadata and 4 groups.
+- **PuzzleGroup** – A group with a title and 4 words; position determines difficulty row (0-3).
+- **PuzzleWord** – A single word within a group.
+- **WordTile** – UI-only struct for gameplay (shuffled grid, selection state).
+- **PuzzlePlaySession** – Ephemeral in-memory model managing a single game run.
 
-**Puzzle**
-- `id: UUID`
-- `sequenceNumber: Int?`
-- `title: String` – human-readable name (e.g. "Hood River Trip").
-- `creatorName: String?`
-- `createdAt: Date`
-- `publishedAt: Date?`
-- `groups: [PuzzleGroup]`
-- `playStatus: PuzzlePlayStatus` – `notStarted`, `inProgress`, `won`, `lost`
-
-**PuzzleGroup**
-- `id: UUID`
-- `title: String` – group name players are meant to infer.
-- `position: Int` – row position (0-3) for stable ordering in creation UI.
-- `words: [PuzzleWord]`
-
-**PuzzleWord**
-- `id: UUID`
-- `text: String`
-- `position: Int` – position within group (0-3) for stable ordering.
-
-**WordTile** (UI-only for the player grid during gameplay)
-- `id: UUID`
-- `text: String`
-- `groupID: UUID` – reference back to `PuzzleGroup`.
-
-**PuzzlePlaySession**
-- Ephemeral, in-memory model that manages a single game run:
-  - Shuffles 16 `WordTile`s.
-  - Tracks selected tile IDs, solved groups, remaining mistakes, and win/lose state.
-  - Used in both preview and play flows.
-
-**Note:** `WordTile` and `PuzzlePlaySession` are used exclusively for the play experience where words are shuffled and displayed in random order. The creation UI works directly with `Puzzle` → `PuzzleGroup` → `PuzzleWord` relationships, preserving the group structure and ordering.
-
-### 7.2 Constraints & Validation
-
-- A valid `Puzzle` must contain exactly 4 groups and 16 words.
-- This is enforced through a validation helper (`PuzzleValidator`) rather than assumptions in every view.
-- Key checks:
-  - Group count == 4; positions 0–3, unique and complete.
-  - Each group has exactly 4 words; positions 0–3, unique and complete.
-  - Group titles and word text are non-empty (after trimming).
-  - No duplicate word text within a puzzle (case-insensitive, trimmed).
+**See `PUZZLE.md` for complete field definitions, validation rules, and implementation details.**
 
 ---
-## 8. Persistence & Repository Abstractions
+## 8. Persistence Strategy
 
-### 8.1 SwiftData Usage
+- **SwiftData** is used for persisting `Puzzle`, `PuzzleGroup`, and `PuzzleWord`.
+- A **repository protocol** (`PuzzleRepository`) abstracts data access:
+  - `InMemoryPuzzleRepository` for previews and tests.
+  - `SwiftDataPuzzleRepository` for the live app.
+- **Fixtures** (`PuzzleFixtures`) provide sample puzzles for previews and testing.
 
-- Model `Puzzle`, `PuzzleGroup`, and `PuzzleWord` using SwiftData `@Model` classes.
-- Configure a `ModelContainer` at the app entry point (in `iykykApp`).
-- Use `@Query` for simple lists where appropriate (e.g. in `PuzzleLibraryView`).
-
-### 8.2 Repository Protocol
-
-UI code can depend on a repository abstraction instead of SwiftData directly:
-
-```swift
-protocol PuzzleRepository {
-    func allPuzzles() -> [Puzzle]
-    func create(_ puzzle: Puzzle)
-    func update(_ puzzle: Puzzle)
-    func delete(_ puzzle: Puzzle)
-}
-```
-
-**Implementations:**
-- **`InMemoryPuzzleRepository`**
-  - Backed by an in-memory store (array/dictionary).
-  - Used by SwiftUI previews and unit tests.
-
-- **`SwiftDataPuzzleRepository`**
-  - Real implementation using SwiftData `ModelContext`.
-  - Used by the live app where explicit repository abstraction is needed.
-
-Goal: We should be able to swap repositories easily in previews via dependency injection when needed.
-
-### 8.3 Fixtures & Sample Data
-
-Create simple fixtures to bootstrap previews and manual testing:
-- `sampleEmptyPuzzle()` – A new puzzle ready for creation. Contains 4 `PuzzleGroup` instances (positions 0-3, empty titles) each with 4 `PuzzleWord` instances (positions 0-3, empty text). This structure allows the creation UI to render a 4×4 grid immediately while still being functionally "blank."
-- `samplePartialPuzzle()` – Some groups/words have content filled in, others remain empty.
-- `sampleCompletedPuzzle()` – Fully valid 4×4 puzzle with all groups and words populated.
-
-**Note on initialization:** When creating a new puzzle for the creation UI, always initialize with the full 4×4 structure (4 groups × 4 words) rather than starting with zero groups. This matches the UX expectation that users see a complete board from the start.
+**See `PUZZLE.md` for repository protocol details and fixture descriptions.**
 
 ---
 ## 9. SwiftUI Preview Strategy
@@ -205,7 +136,7 @@ Previews are a lightweight way to **visually iterate on a screen as if it were r
 
 2. **Single, minimal configuration**
    - The preview should show **one realistic configuration** of the view that you can scroll, tap, and type into.
-   - Do not model “empty / partial / complete” or other multi-state permutations in separate previews.
+   - Do not model "empty / partial / complete" or other multi-state permutations in separate previews.
    - For navigation-based screens, it is fine to wrap the view in a simple `NavigationStack` so it behaves like it does in the app.
 
 3. **Simple data and dependencies**
@@ -219,75 +150,11 @@ Previews are a lightweight way to **visually iterate on a screen as if it were r
    - If you find yourself adding multiple scenarios or complex wiring, prefer to test those flows in the simulator instead.
 
 ---
-## 10. Minimal App Shell
+## 10. Inject Hot Reloading for SwiftUI Views
 
-Even though previews are primary, we still need a thin shell for running on device.
+We use [Inject](https://github.com/krzysztofzablocki/Inject) for hot reloading during development.
 
-**App entry flow:**
-- `iykykApp` configures a shared `ModelContainer` for `Puzzle`, `PuzzleGroup`, and `PuzzleWord`, then shows `RootView`.
-- `RootView` uses a `TabView` with:
-  - **Create tab**: `NavigationStack` → `PuzzleLibraryView(mode: .create)`
-    - Lists all puzzles (draft + published) from SwiftData.
-    - `+` toolbar button starts a new `PuzzleCreationView`.
-    - Selecting a draft opens `PuzzleCreationView`; selecting a published puzzle opens `PuzzlePreviewView`.
-  - **Play tab**: `NavigationStack` → `PuzzleLibraryView(mode: .play)`
-    - Lists only published puzzles.
-    - Selecting a puzzle opens `PuzzlePlayView` for full gameplay.
-
-**Autosave behavior (creation):**
-- New puzzles are inserted into SwiftData when the creation flow begins.
-- Changes are saved automatically as the user edits.
-- Back navigation triggers a final save before dismissing.
-- No explicit "Save" button needed—changes persist immediately.
-
-Keep navigation minimal and avoid over-engineering router patterns at this stage.
-
----
-## 11. Gameplay Rules
-
-This section defines the minimal gameplay contract required for building consistent previews and interactions across the creation and play UX.
-
-### 11.1 Puzzle Structure
-
-- A puzzle always contains 4 groups.
-- Each group contains exactly 4 words.
-- A puzzle is considered complete when all 4 groups have been correctly identified.
-
-### 11.2 Player Interactions
-
-- Words are displayed in a 4×4 grid in randomized order.
-- Players tap to select or deselect words.
-- The system allows selecting up to 4 words at any time.
-
-### 11.3 Guessing & Validation
-
-- A guess is submitted when the player has exactly 4 words selected.
-- A guess is correct when all 4 selected words belong to the same `PuzzleGroup`.
-- A guess is incorrect when the 4 selected words do not all belong to the same group.
-- A limited number of incorrect guesses are allowed before game over (currently 4).
-
-### 11.4 Feedback Model
-
-**Correct guess**
-- The group is “solved.”
-- The tiles have some fun animation.
-- Those 4 tiles are visually marked and removed or locked from future interaction.
-
-**Incorrect guess**
-- The tiles shake after a slight delay.
-- The selected words are deselected automatically.
-- The number of guesses left decrements by 1.
-
-### 11.5 Win Condition
-
-The puzzle is solved when all 4 groups have been correctly identified.
-
----
-## 12. Inject Hot Reloading for SwiftUI Views
-
-We use [Inject](https://github.com/krzysztofzablocki/Inject) for hot reloading during development (see also the reference example commit: `InjectSwiftUIExample`).
-
-### 12.1 Project setup (one-time)
+### 10.1 Project setup (one-time)
 
 - The `Inject` Swift package is already added to the app target.
 - `OTHER_LDFLAGS` for the Debug configuration includes `-Xlinker -interposable` so injection can swizzle symbols at runtime.
@@ -295,9 +162,7 @@ We use [Inject](https://github.com/krzysztofzablocki/Inject) for hot reloading d
   - Launch the InjectionIII app and point it at this project.
   - Run the app in Debug from Xcode.
 
-You usually don’t have to touch this project-level setup unless Xcode/project settings change.
-
-### 12.2 How to wire a new SwiftUI view for injection
+### 10.2 How to wire a new SwiftUI view for injection
 
 For any SwiftUI `View` where you want hot reloading:
 
@@ -331,6 +196,3 @@ Guidelines:
 - Put `.enableInjection()` as far out as possible in the view hierarchy (usually on the root container, like a `NavigationStack`, `VStack`, or `ZStack`).
 - Child views nested under an instrumented parent will still participate in injection when you edit them, but for frequently edited leaf views it can be useful to wire them up directly as well.
 - Keep this strictly as a **development tool**; do not rely on Inject for any production behavior.
-
-
-
