@@ -466,3 +466,4 @@ The following shared components in `Core/DesignSystem/` are used across play and
 | `ShakeEffect` | `Effects/` | Horizontal shake animation for incorrect guesses |
 
 These shared components ensure consistent UI across `PuzzlePreviewView` and `PuzzlePlayView` while eliminating code duplication.
+

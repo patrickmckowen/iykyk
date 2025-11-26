@@ -227,14 +227,16 @@ iykyk/
 │   └── PuzzlePlay/
 │       └── Views/        # PuzzlePlayView
 │
-├── docs/
-│   ├── AGENTS.md         # This file (high-level context)
-│   └── PUZZLE.md         # Detailed puzzle implementation reference
-│
 ├── Resources/            # Asset catalogs, etc.
 ├── iykykApp.swift        # App entry point, ModelContainer setup
 └── RootView.swift        # Root TabView navigation
 ```
+
+**Documentation:**
+- All project documentation lives in the `/docs` directory at the project root.
+- `AGENTS.md` (this file) – High-level product context and architectural strategy
+- `PUZZLE.md` – Detailed puzzle implementation reference
+- Additional planning and feature docs are also in `/docs`
 
 ### 11.1 Where to Put New Code
 
@@ -251,6 +253,7 @@ iykyk/
 | Feature-specific component | `Features/{FeatureName}/Components/` | `EditableWordTile.swift` |
 | Feature-specific model/enum | `Features/{FeatureName}/Models/` | `PuzzleCreationFocusField.swift` |
 | Shared Swift extensions | `Core/Extensions/` | `String+Extensions.swift` |
+| **Documentation** | **`/docs`** | **`AGENTS.md`, `PUZZLE.md`** |
 
 ### 11.2 Naming Conventions
 
@@ -259,6 +262,7 @@ iykyk/
 - **Repositories** end with `Repository`: `InMemoryPuzzleRepository`
 - **Extensions** use `TypeName+Extensions.swift` format
 - **Test files** use `TypeNameTests.swift` format
+- **Documentation** files use `.md` extension and live in `/docs`
 
 ### 11.3 Adding a New Feature
 
@@ -270,6 +274,7 @@ iykyk/
 6. If the feature needs shared UI components, add them to `Core/DesignSystem/Components/`
 7. Wire navigation in `RootView.swift` or the appropriate parent view
 8. Add Inject support to new views for hot reloading (see Section 10.2)
+9. **Add any feature documentation to `/docs`** (not in the feature folder)
 
 ### 11.4 Shared DesignSystem Components
 
@@ -289,3 +294,4 @@ The following shared components are available in `Core/DesignSystem/`:
 
 **Effects:**
 - `ShakeEffect` – Horizontal shake animation for incorrect guesses
+
