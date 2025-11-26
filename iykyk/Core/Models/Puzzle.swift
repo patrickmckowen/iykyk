@@ -37,8 +37,8 @@ final class Puzzle {
     // Must be internal (not private) for SwiftData to access it
     var playStatusRaw: String = PuzzlePlayStatus.notStarted.rawValue
     
-    /// Stores solved group positions as array (SwiftData doesn't support Set directly)
-    var solvedGroupPositionsRaw: [Int] = []
+    /// Stores solved group positions as JSON Data (SwiftData doesn't support [Int] directly)
+    var solvedGroupPositionsData: Data?
     
     /// Number of incorrect guesses remaining (starts at 4)
     var guessesRemaining: Int = 4
@@ -59,10 +59,15 @@ final class Puzzle {
     /// Tracks which group positions (0-3) have been solved during gameplay
     var solvedGroupPositions: Set<Int> {
         get {
-            Set(solvedGroupPositionsRaw)
+            guard let data = solvedGroupPositionsData,
+                  let positions = try? JSONDecoder().decode([Int].self, from: data) else {
+                return []
+            }
+            return Set(positions)
         }
         set {
-            solvedGroupPositionsRaw = Array(newValue).sorted()
+            let sorted = Array(newValue).sorted()
+            solvedGroupPositionsData = try? JSONEncoder().encode(sorted)
         }
     }
     
@@ -145,7 +150,8 @@ final class Puzzle {
         self.createdAt = createdAt
         self.publishedAt = publishedAt
         self.playStatusRaw = playStatus.rawValue
-        self.solvedGroupPositionsRaw = Array(solvedGroupPositions).sorted()
+        let sorted = Array(solvedGroupPositions).sorted()
+        self.solvedGroupPositionsData = try? JSONEncoder().encode(sorted)
         self.guessesRemaining = guessesRemaining
         self.groups = groups
     }

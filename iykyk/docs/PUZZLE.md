@@ -20,7 +20,7 @@ This doc covers **how puzzles are modeled, created, validated, and played** in d
 | `publishedAt` | `Date?` | When published (nil = draft) |
 | `groups` | `[PuzzleGroup]` | SwiftData `@Relationship`, cascade delete |
 | `playStatusRaw` | `String` | Backing store for `playStatus` enum |
-| `solvedGroupPositionsRaw` | `[Int]` | Backing store for solved group positions (SwiftData doesn't support Set) |
+| `solvedGroupPositionsData` | `Data?` | JSON-encoded backing store for solved group positions (SwiftData doesn't support `[Int]` directly) |
 | `guessesRemaining` | `Int` | Number of incorrect guesses remaining (starts at 4) |
 
 **Computed properties:**
