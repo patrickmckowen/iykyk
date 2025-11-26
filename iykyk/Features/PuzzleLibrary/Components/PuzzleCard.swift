@@ -44,10 +44,9 @@ struct PuzzleCard: View {
             
             // Center: Words + Metadata
             VStack(alignment: .leading, spacing: 4) {
-                // Word preview - using New York serif font
+                // Word preview
                 Text(puzzle.wordPreview)
-                    .font(.custom("NewYork-Semibold", size: 16, relativeTo: .headline))
-                    .fontWeight(.semibold)
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 
