@@ -15,6 +15,8 @@ struct EditableWordTile: View {
     let fieldID: PuzzleCreationFocusField
     
     @State private var fontSize: CGFloat = 16
+    @State private var fontSizeTask: Task<Void, Never>?
+    @State private var currentSize: CGSize = .zero
     @ObserveInjection private var inject
     
     // Visual constants
@@ -35,6 +37,7 @@ struct EditableWordTile: View {
         GeometryReader { geometry in
             ZStack {
                 TextField("WORD", text: $text, axis: .vertical)
+                    .lineLimit(2)
                     .textFieldStyle(.plain)
                     .font(.system(size: fontSize, weight: .bold))
                     .multilineTextAlignment(.center)
@@ -62,18 +65,31 @@ struct EditableWordTile: View {
                             text = newValue.replacingOccurrences(of: "\n", with: "")
                             focusedField = nil
                         }
-                        updateFontSize(availableSize: geometry.size)
+                        // Debounce font size calculation during typing
+                        fontSizeTask?.cancel()
+                        fontSizeTask = Task {
+                            try? await Task.sleep(for: .milliseconds(100))
+                            guard !Task.isCancelled else { return }
+                            await MainActor.run {
+                                updateFontSize(availableSize: currentSize)
+                            }
+                        }
                     }
                     .onChange(of: geometry.size) { _, newSize in
+                        currentSize = newSize
                         updateFontSize(availableSize: newSize)
                     }
                     .onAppear {
+                        currentSize = geometry.size
                         updateFontSize(availableSize: geometry.size)
                     }
                     .contentShape(RoundedRectangle(cornerRadius: cornerRadius))
-                    .onTapGesture {
-                        focusedField = fieldID
-                    }
+                    .simultaneousGesture(
+                        TapGesture()
+                            .onEnded {
+                                focusedField = fieldID
+                            }
+                    )
             }
         }
         .aspectRatio(1, contentMode: .fit)

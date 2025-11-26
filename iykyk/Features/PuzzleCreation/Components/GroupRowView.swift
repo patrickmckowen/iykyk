@@ -35,6 +35,8 @@ struct GroupRowView: View {
                     .onSubmit {
                         focusedField = nil
                     }
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.words)
                 
                 Text(GroupDifficulty.label(for: group.position).uppercased())
                     .font(.caption2)
@@ -45,18 +47,30 @@ struct GroupRowView: View {
             // 4 word tiles in a row
             HStack(spacing: 8) {
                 ForEach(group.words.sorted(by: { $0.position < $1.position })) { word in
-                    EditableWordTile(
-                        text: Binding(
-                            get: { word.text },
-                            set: { word.text = $0 }
-                        ),
+                    WordTileWrapper(
+                        word: word,
                         focusedField: $focusedField,
-                        fieldID: .word(groupIndex: group.position, wordIndex: word.position)
+                        groupPosition: group.position
                     )
                 }
             }
         }
         .enableInjection()
+    }
+}
+
+/// Wrapper view that uses @Bindable to efficiently bind to PuzzleWord.text
+private struct WordTileWrapper: View {
+    @Bindable var word: PuzzleWord
+    @FocusState.Binding var focusedField: PuzzleCreationFocusField?
+    let groupPosition: Int
+    
+    var body: some View {
+        EditableWordTile(
+            text: $word.text,
+            focusedField: $focusedField,
+            fieldID: .word(groupIndex: groupPosition, wordIndex: word.position)
+        )
     }
 }
 

@@ -76,6 +76,10 @@ struct PuzzleCreationView: View {
             }
             
             ToolbarItemGroup(placement: .keyboard) {
+                Button("Done") {
+                    focusedField = nil
+                }
+                
                 Spacer()
                 
                 Button(action: moveToPreviousField) {
