@@ -295,3 +295,12 @@ The following shared components are available in `Core/DesignSystem/`:
 **Effects:**
 - `ShakeEffect` – Horizontal shake animation for incorrect guesses
 
+---
+## 12. AI Agent Guidelines
+
+When working on this codebase, follow these principles:
+
+1. **Only make changes that are directly requested.** Keep solutions simple and focused. Don't add features, refactor code, or make "improvements" beyond what was asked.
+
+2. **ALWAYS read and understand relevant files before proposing edits.** Do not speculate about code you have not inspected. If a specific file or path is referenced, open and review it before explaining or proposing fixes.
+
