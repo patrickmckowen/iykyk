@@ -79,7 +79,7 @@ struct PuzzleCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Title - differs between Play and Create modes
                 Text(titleText)
-                    .font(.custom("NewYork-Semibold", size: 16, relativeTo: .headline))
+                    .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
