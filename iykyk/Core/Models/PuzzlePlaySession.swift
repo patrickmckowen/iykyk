@@ -35,12 +35,19 @@ class PuzzlePlaySession {
     private var groupsByID: [UUID: PuzzleGroup] = [:]
     
     /// Creates a new play session derived from a given `Puzzle`.
+    /// Restores any previously solved groups and guesses remaining from the puzzle state.
     init(puzzle: Puzzle) {
         var lookup: [UUID: PuzzleGroup] = [:]
         for group in puzzle.groups {
             lookup[group.id] = group
         }
         self.groupsByID = lookup
+        
+        // Restore solved groups from puzzle (sorted by position)
+        self.solvedGroupIDs = puzzle.solvedGroupIDs
+        
+        // Restore guesses remaining
+        self.guessesRemaining = puzzle.guessesRemaining
         
         let allTiles: [WordTile] = puzzle.groups.flatMap { group in
             group.words.map { word in

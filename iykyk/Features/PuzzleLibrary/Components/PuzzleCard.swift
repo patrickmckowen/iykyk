@@ -23,9 +23,42 @@ struct PuzzleCard: View {
         }
     }
     
+    /// Title text for the card - differs between Play and Create modes
+    private var titleText: String {
+        if showPlayStatus {
+            // Play mode: "Puzzle #N"
+            return "Puzzle \(sequenceText)"
+        } else {
+            // Create mode: word preview
+            return puzzle.wordPreview
+        }
+    }
+    
+    /// Metadata text for the card - differs between Play and Create modes
     private var metadataText: String {
-        let timeText = puzzle.createdAt.relativeFormat()
-        return "\(sequenceText) · \(timeText)"
+        if showPlayStatus {
+            // Play mode: just the published date
+            if let publishedAt = puzzle.publishedAt {
+                return publishedAt.relativeFormat()
+            } else {
+                return "Not published"
+            }
+        } else {
+            // Create mode: sequence number + created time
+            let timeText = puzzle.createdAt.relativeFormat()
+            return "\(sequenceText) · \(timeText)"
+        }
+    }
+    
+    /// Groups to show as completed in thumbnail - differs between Play and Create modes
+    private var thumbnailCompletedGroups: Set<Int> {
+        if showPlayStatus {
+            // Play mode: show solved groups during gameplay
+            return puzzle.solvedGroupPositions
+        } else {
+            // Create mode: show groups with all words filled
+            return puzzle.completedGroupPositions
+        }
     }
     
     private var cardBackground: Color {
@@ -38,15 +71,15 @@ struct PuzzleCard: View {
         HStack(spacing: 12) {
             // Left: Thumbnail showing group completion progress
             PuzzleThumbnail(
-                isPublished: puzzle.isPublished,
-                completedGroups: puzzle.completedGroupPositions
+                isPublished: showPlayStatus ? false : puzzle.isPublished,
+                completedGroups: thumbnailCompletedGroups
             )
             
-            // Center: Words + Metadata
+            // Center: Title + Metadata
             VStack(alignment: .leading, spacing: 4) {
-                // Word preview - using New York serif font
-                Text(puzzle.wordPreview)
-                    .font(.custom("NewYork-Semibold", size: 16, relativeTo: .headline))
+                // Title - differs between Play and Create modes
+                Text(titleText)
+                    .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -123,6 +156,11 @@ struct PuzzleCardButtonStyle: ButtonStyle {
 #Preview {
     ScrollView {
         VStack(spacing: 12) {
+            // Create mode examples
+            Text("Create Tab")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            
             PuzzleCard(puzzle: PuzzleFixtures.sampleEmptyPuzzle(), showPlayStatus: false)
             PuzzleCard(puzzle: PuzzleFixtures.samplePartialPuzzle(), showPlayStatus: false)
             PuzzleCard(puzzle: PuzzleFixtures.sampleCompletedPuzzle(), showPlayStatus: false)
@@ -131,7 +169,48 @@ struct PuzzleCardButtonStyle: ButtonStyle {
                 .padding(.vertical, 8)
             
             // Play mode examples
-            PuzzleCard(puzzle: PuzzleFixtures.sampleCompletedPuzzle(), showPlayStatus: true)
+            Text("Play Tab")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            
+            // Not started
+            PuzzleCard(
+                puzzle: PuzzleFixtures.samplePublishedPuzzle(
+                    playStatus: .notStarted,
+                    sequenceNumber: 5
+                ),
+                showPlayStatus: true
+            )
+            
+            // In progress with 2 groups solved
+            PuzzleCard(
+                puzzle: PuzzleFixtures.samplePublishedPuzzle(
+                    playStatus: .inProgress,
+                    sequenceNumber: 4,
+                    solvedGroupPositions: [0, 1]
+                ),
+                showPlayStatus: true
+            )
+            
+            // Won with all groups solved
+            PuzzleCard(
+                puzzle: PuzzleFixtures.samplePublishedPuzzle(
+                    playStatus: .won,
+                    sequenceNumber: 3,
+                    solvedGroupPositions: [0, 1, 2, 3]
+                ),
+                showPlayStatus: true
+            )
+            
+            // Lost with 1 group solved
+            PuzzleCard(
+                puzzle: PuzzleFixtures.samplePublishedPuzzle(
+                    playStatus: .lost,
+                    sequenceNumber: 2,
+                    solvedGroupPositions: [0]
+                ),
+                showPlayStatus: true
+            )
         }
         .padding(.horizontal, 16)
     }

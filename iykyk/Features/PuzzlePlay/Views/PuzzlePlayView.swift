@@ -237,7 +237,7 @@ struct PuzzlePlayView: View {
                         HStack(spacing: 0) {
                             ForEach(tiles) { tile in
                                 Color.clear
-                                    .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                                    .matchedGeometryEffect(id: tile.id, in: tileNamespace, isSource: true)
                             }
                         }
                     )
@@ -255,7 +255,12 @@ struct PuzzlePlayView: View {
         guard let result = session.submitGuess() else { return }
 
         switch result {
-        case .correct:
+        case .correct(let groupID, _):
+            // Sync solved group to puzzle
+            if let group = puzzle.groups.first(where: { $0.id == groupID }) {
+                puzzle.solvedGroupPositions.insert(group.position)
+            }
+            
             // Animate solved group
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 // Animation happens via state change in session
@@ -264,8 +269,8 @@ struct PuzzlePlayView: View {
             // Check if game is won and persist
             if session.state == .won {
                 puzzle.playStatus = .won
-                saveContext()
             }
+            saveContext()
             
         case .incorrect:
             // Store which tiles to shake
@@ -286,11 +291,14 @@ struct PuzzlePlayView: View {
                     withAnimation {
                         session.applyIncorrectGuessPenalty()
                         
+                        // Sync guesses remaining to puzzle
+                        puzzle.guessesRemaining = session.guessesRemaining
+                        
                         // Check if game is lost and persist
                         if session.state == .lost {
                             puzzle.playStatus = .lost
-                            saveContext()
                         }
+                        saveContext()
                     }
                 }
             }

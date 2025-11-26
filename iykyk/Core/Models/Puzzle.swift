@@ -37,6 +37,12 @@ final class Puzzle {
     // Must be internal (not private) for SwiftData to access it
     var playStatusRaw: String = PuzzlePlayStatus.notStarted.rawValue
     
+    /// Stores solved group positions as JSON Data (SwiftData doesn't support [Int] directly)
+    var solvedGroupPositionsData: Data?
+    
+    /// Number of incorrect guesses remaining (starts at 4)
+    var guessesRemaining: Int = 4
+    
     @Relationship(deleteRule: .cascade, inverse: \PuzzleGroup.puzzle)
     var groups: [PuzzleGroup]
     
@@ -48,6 +54,29 @@ final class Puzzle {
         set {
             playStatusRaw = newValue.rawValue
         }
+    }
+    
+    /// Tracks which group positions (0-3) have been solved during gameplay
+    var solvedGroupPositions: Set<Int> {
+        get {
+            guard let data = solvedGroupPositionsData,
+                  let positions = try? JSONDecoder().decode([Int].self, from: data) else {
+                return []
+            }
+            return Set(positions)
+        }
+        set {
+            let sorted = Array(newValue).sorted()
+            solvedGroupPositionsData = try? JSONEncoder().encode(sorted)
+        }
+    }
+    
+    /// Returns the UUIDs of solved groups, sorted by position
+    var solvedGroupIDs: [UUID] {
+        groups
+            .filter { solvedGroupPositions.contains($0.position) }
+            .sorted { $0.position < $1.position }
+            .map { $0.id }
     }
     
     // Convenience computed properties
@@ -110,6 +139,8 @@ final class Puzzle {
         createdAt: Date = Date(),
         publishedAt: Date? = nil,
         playStatus: PuzzlePlayStatus = .notStarted,
+        solvedGroupPositions: Set<Int> = [],
+        guessesRemaining: Int = 4,
         groups: [PuzzleGroup] = []
     ) {
         self.id = id
@@ -119,6 +150,9 @@ final class Puzzle {
         self.createdAt = createdAt
         self.publishedAt = publishedAt
         self.playStatusRaw = playStatus.rawValue
+        let sorted = Array(solvedGroupPositions).sorted()
+        self.solvedGroupPositionsData = try? JSONEncoder().encode(sorted)
+        self.guessesRemaining = guessesRemaining
         self.groups = groups
     }
 }
