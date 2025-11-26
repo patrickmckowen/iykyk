@@ -104,11 +104,11 @@ For the **current phase**, we are focused primarily on the **Create** part of th
 
 We model a single iykyk puzzle with a hard 4×4 constraint:
 
-- **Puzzle** – The top-level entity containing metadata and 4 groups.
+- **Puzzle** – The top-level entity containing metadata, 4 groups, and persisted game progress (solved groups, guesses remaining).
 - **PuzzleGroup** – A group with a title and 4 words; position determines difficulty row (0-3).
 - **PuzzleWord** – A single word within a group.
 - **WordTile** – UI-only struct for gameplay (shuffled grid, selection state).
-- **PuzzlePlaySession** – Ephemeral in-memory model managing a single game run.
+- **PuzzlePlaySession** – In-memory model managing active game run; restores state from Puzzle on init and syncs progress back.
 
 **See `PUZZLE.md` for complete field definitions, validation rules, and implementation details.**
 
@@ -116,6 +116,7 @@ We model a single iykyk puzzle with a hard 4×4 constraint:
 ## 8. Persistence Strategy
 
 - **SwiftData** is used for persisting `Puzzle`, `PuzzleGroup`, and `PuzzleWord`.
+- **Game progress** is persisted on `Puzzle`: `solvedGroupPositions`, `guessesRemaining`, and `playStatus` are saved after each guess, allowing players to resume in-progress games.
 - A **repository protocol** (`PuzzleRepository`) abstracts data access:
   - `InMemoryPuzzleRepository` for previews and tests.
   - `SwiftDataPuzzleRepository` for the live app.
@@ -221,7 +222,7 @@ iykyk/
 │   │   └── Models/       # PuzzleCreationFocusField
 │   ├── PuzzleLibrary/
 │   │   ├── Views/        # PuzzleLibraryView
-│   │   ├── Components/   # PuzzleRowView, EmptyStateView
+│   │   ├── Components/   # PuzzleCard, EmptyStateView
 │   │   └── Models/       # LibraryMode
 │   └── PuzzlePlay/
 │       └── Views/        # PuzzlePlayView
@@ -280,6 +281,8 @@ The following shared components are available in `Core/DesignSystem/`:
 - `GameTileButton` – Interactive tile button for gameplay
 - `MistakesRemainingView` – Shows remaining incorrect guesses
 - `GameControlsView` – Shuffle/Deselect All/Submit button row
+- `ProgressRing` – Circular progress indicator
+- `PuzzleThumbnail` – 1×4 mini-grid showing group completion/solve status
 
 **Styles:**
 - `CapsuleButtonStyle` – Capsule-shaped button style for game controls

@@ -36,7 +36,7 @@ struct GameTileButton: View {
                                     .strokeBorder(Color(.systemGray4), lineWidth: 1)
                             )
                     )
-                    .matchedGeometryEffect(id: tileID, in: namespace)
+                    .matchedGeometryEffect(id: tileID, in: namespace, isSource: false)
             }
         }
         .buttonStyle(.plain)
