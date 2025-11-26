@@ -237,7 +237,7 @@ struct PuzzlePlayView: View {
                         HStack(spacing: 0) {
                             ForEach(tiles) { tile in
                                 Color.clear
-                                    .matchedGeometryEffect(id: tile.id, in: tileNamespace)
+                                    .matchedGeometryEffect(id: tile.id, in: tileNamespace, isSource: true)
                             }
                         }
                     )
