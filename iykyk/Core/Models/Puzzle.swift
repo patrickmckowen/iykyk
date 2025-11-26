@@ -37,8 +37,8 @@ final class Puzzle {
     // Must be internal (not private) for SwiftData to access it
     var playStatusRaw: String = PuzzlePlayStatus.notStarted.rawValue
     
-    /// Tracks which group positions (0-3) have been solved during gameplay
-    var solvedGroupPositions: Set<Int> = []
+    /// Stores solved group positions as array (SwiftData doesn't support Set directly)
+    var solvedGroupPositionsRaw: [Int] = []
     
     @Relationship(deleteRule: .cascade, inverse: \PuzzleGroup.puzzle)
     var groups: [PuzzleGroup]
@@ -50,6 +50,16 @@ final class Puzzle {
         }
         set {
             playStatusRaw = newValue.rawValue
+        }
+    }
+    
+    /// Tracks which group positions (0-3) have been solved during gameplay
+    var solvedGroupPositions: Set<Int> {
+        get {
+            Set(solvedGroupPositionsRaw)
+        }
+        set {
+            solvedGroupPositionsRaw = Array(newValue).sorted()
         }
     }
     
@@ -123,7 +133,7 @@ final class Puzzle {
         self.createdAt = createdAt
         self.publishedAt = publishedAt
         self.playStatusRaw = playStatus.rawValue
-        self.solvedGroupPositions = solvedGroupPositions
+        self.solvedGroupPositionsRaw = Array(solvedGroupPositions).sorted()
         self.groups = groups
     }
 }
