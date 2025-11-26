@@ -13,11 +13,11 @@ struct PuzzleThumbnail: View {
     var completedGroups: Set<Int> = []
     var size: CGFloat = 32
     
-    private let spacing: CGFloat = 2
+    private let spacing: CGFloat = 0
     
-    /// Height of each row: (totalHeight - 3 gaps) / 4 rows
+    /// Height of each row: totalHeight / 4 rows
     private var rowHeight: CGFloat {
-        (size - 3 * spacing) / 4
+        size / 4
     }
     
     /// Width equals total height to make the thumbnail square
@@ -33,6 +33,11 @@ struct PuzzleThumbnail: View {
             rowView(position: 3)
         }
         .frame(width: totalWidth, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.15))
+        .overlay(
+            RoundedRectangle(cornerRadius: size * 0.15)
+                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+        )
     }
     
     @ViewBuilder
@@ -40,15 +45,8 @@ struct PuzzleThumbnail: View {
         let color = GroupColors.color(for: position)
         let isFilled = isPublished || completedGroups.contains(position)
         
-        RoundedRectangle(cornerRadius: 2)
-            .fill(isFilled ? color : Color.clear)
-            .overlay(
-                RoundedRectangle(cornerRadius: 2)
-                    .strokeBorder(
-                        isFilled ? color : Color.secondary.opacity(0.5),
-                        lineWidth: isFilled ? 0 : 1
-                    )
-            )
+        Rectangle()
+            .fill(isFilled ? color : Color.secondary.opacity(0.1))
             .frame(width: totalWidth, height: rowHeight)
     }
 }
