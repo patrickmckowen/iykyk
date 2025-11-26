@@ -20,12 +20,19 @@ This doc covers **how puzzles are modeled, created, validated, and played** in d
 | `publishedAt` | `Date?` | When published (nil = draft) |
 | `groups` | `[PuzzleGroup]` | SwiftData `@Relationship`, cascade delete |
 | `playStatusRaw` | `String` | Backing store for `playStatus` enum |
+| `solvedGroupPositionsRaw` | `[Int]` | Backing store for solved group positions (SwiftData doesn't support Set) |
+| `guessesRemaining` | `Int` | Number of incorrect guesses remaining (starts at 4) |
 
 **Computed properties:**
 - `playStatus: PuzzlePlayStatus` – `.notStarted`, `.inProgress`, `.won`, `.lost`
+- `solvedGroupPositions: Set<Int>` – Type-safe accessor for solved group positions (0-3)
+- `solvedGroupIDs: [UUID]` – UUIDs of solved groups, sorted by position
 - `isPublished: Bool` – `publishedAt != nil`
 - `publishStatusText: String` – Display string for publish state
 - `isPlayable: Bool` – Whether puzzle can be played
+- `wordPreview: String` – All non-empty words as a comma-separated preview string
+- `filledWordCount: Int` – Count of non-empty words (0-16)
+- `completedGroupPositions: Set<Int>` – Group positions where all 4 words are filled
 
 ### 1.2 PuzzleGroup
 
@@ -104,6 +111,7 @@ Each `ValidationIssue` has a `message: String` describing the problem.
 | `sampleEmptyPuzzle()` | 4 groups × 4 words, all empty. Ready for creation UI. |
 | `samplePartialPuzzle()` | Mixed-filled example for testing partial states. |
 | `sampleCompletedPuzzle()` | Fully valid 4×4 puzzle for previews/tests. |
+| `samplePublishedPuzzle(playStatus:sequenceNumber:solvedGroupPositions:guessesRemaining:)` | Published puzzle with configurable play state for Play tab previews. |
 
 **Initialization note:** When creating a new puzzle for the creation UI, always initialize with the full 4×4 structure (4 groups × 4 words with empty content) rather than zero groups. This matches the UX expectation that users see a complete board from the start.
 
@@ -196,11 +204,21 @@ Uses `@Query(sort: \Puzzle.createdAt, order: .reverse)` to load all puzzles.
 - `.create`: "No Puzzles Yet" with hint to tap `+`.
 - `.play`: "No Published Puzzles" with hint to publish from Create mode.
 
-### 6.5 PuzzleRowView
+### 6.5 PuzzleCard
 
-Location: `Features/PuzzleLibrary/Components/PuzzleRowView.swift`
+Location: `Features/PuzzleLibrary/Components/PuzzleCard.swift`
 
-Displays a puzzle row in the library list with sequence number, status capsule, word count, and creation date.
+Card component for displaying a puzzle in the library list.
+
+**Props:**
+- `puzzle: Puzzle` – The puzzle to display
+- `showPlayStatus: Bool` – When `true` (Play mode), shows play status badge and solved group progress in thumbnail; when `false` (Create mode), shows draft/published status and word fill progress
+
+**Display:**
+- **Thumbnail**: `PuzzleThumbnail` showing group completion (Create: filled words, Play: solved groups)
+- **Title**: Word preview (Create) or "Puzzle #N" (Play)
+- **Metadata**: Sequence number + created time (Create) or published date (Play)
+- **Status badge**: Draft/Published (Create) or New/Playing/Won/Lost (Play)
 
 ---
 
@@ -324,9 +342,14 @@ Top-right `Publish` / `Published` button:
 |--------------|----------|
 | `.won` or `.lost` | Shows end-state view with result banner and all 4 groups rendered as colored rows. |
 | `.notStarted` | Sets `playStatus = .inProgress`, saves, creates new `PuzzlePlaySession`. |
-| `.inProgress` | Creates new `PuzzlePlaySession` for current run. |
+| `.inProgress` | Creates `PuzzlePlaySession`, restoring previously solved groups and guesses remaining from puzzle. |
 
-**Note:** Session state itself is not persisted; only `playStatus` is saved.
+**Persistence:** Game progress is now fully persisted:
+- `puzzle.solvedGroupPositions` – Which groups have been solved (synced after each correct guess)
+- `puzzle.guessesRemaining` – Remaining incorrect guesses (synced after each incorrect guess)
+- `puzzle.playStatus` – Overall game state
+
+When the user navigates away and returns, `PuzzlePlaySession` restores from these persisted values.
 
 ### 9.3 Gameplay UI
 
@@ -352,11 +375,12 @@ Similar to `PuzzlePreviewView`, using shared components from `Core/DesignSystem/
 Derived from a `Puzzle`:
 - Builds `tiles: [WordTile]` by flattening groups/words, then shuffles.
 - Builds `groupsByID` to look up group titles by `groupID`.
+- **Restores state** from `puzzle.solvedGroupIDs` and `puzzle.guessesRemaining` for in-progress games.
 
 **Mutable state:**
 - `selectedTileIDs: Set<UUID>`
-- `solvedGroupIDs: [UUID]` (in solve order)
-- `guessesRemaining: Int = 4`
+- `solvedGroupIDs: [UUID]` (in solve order, restored from puzzle)
+- `guessesRemaining: Int` (restored from puzzle, defaults to 4)
 - `state: PuzzlePlayState = .inProgress`
 - `lastGuessResult: GuessResult?`
 
@@ -436,6 +460,8 @@ The following shared components in `Core/DesignSystem/` are used across play and
 | `GameTileButton` | `Components/` | Interactive tile button for gameplay |
 | `MistakesRemainingView` | `Components/` | Shows remaining incorrect guesses |
 | `GameControlsView` | `Components/` | Shuffle/Deselect All/Submit button row |
+| `ProgressRing` | `Components/` | Circular progress indicator |
+| `PuzzleThumbnail` | `Components/` | 1×4 mini-grid showing group completion/solve status |
 | `CapsuleButtonStyle` | `Styles/` | Capsule-shaped button style |
 | `ShakeEffect` | `Effects/` | Horizontal shake animation for incorrect guesses |
 

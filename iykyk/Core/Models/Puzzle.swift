@@ -40,6 +40,9 @@ final class Puzzle {
     /// Stores solved group positions as array (SwiftData doesn't support Set directly)
     var solvedGroupPositionsRaw: [Int] = []
     
+    /// Number of incorrect guesses remaining (starts at 4)
+    var guessesRemaining: Int = 4
+    
     @Relationship(deleteRule: .cascade, inverse: \PuzzleGroup.puzzle)
     var groups: [PuzzleGroup]
     
@@ -61,6 +64,14 @@ final class Puzzle {
         set {
             solvedGroupPositionsRaw = Array(newValue).sorted()
         }
+    }
+    
+    /// Returns the UUIDs of solved groups, sorted by position
+    var solvedGroupIDs: [UUID] {
+        groups
+            .filter { solvedGroupPositions.contains($0.position) }
+            .sorted { $0.position < $1.position }
+            .map { $0.id }
     }
     
     // Convenience computed properties
@@ -124,6 +135,7 @@ final class Puzzle {
         publishedAt: Date? = nil,
         playStatus: PuzzlePlayStatus = .notStarted,
         solvedGroupPositions: Set<Int> = [],
+        guessesRemaining: Int = 4,
         groups: [PuzzleGroup] = []
     ) {
         self.id = id
@@ -134,6 +146,7 @@ final class Puzzle {
         self.publishedAt = publishedAt
         self.playStatusRaw = playStatus.rawValue
         self.solvedGroupPositionsRaw = Array(solvedGroupPositions).sorted()
+        self.guessesRemaining = guessesRemaining
         self.groups = groups
     }
 }

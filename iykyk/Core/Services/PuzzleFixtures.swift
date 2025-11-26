@@ -113,11 +113,13 @@ struct PuzzleFixtures {
     ///   - playStatus: The play status for the puzzle (default: .notStarted)
     ///   - sequenceNumber: Optional sequence number for display
     ///   - solvedGroupPositions: Set of group positions that have been solved during gameplay
+    ///   - guessesRemaining: Number of incorrect guesses remaining (default: 4)
     /// - Returns: A fully valid, published puzzle
     static func samplePublishedPuzzle(
         playStatus: PuzzlePlayStatus = .notStarted,
         sequenceNumber: Int? = nil,
-        solvedGroupPositions: Set<Int> = []
+        solvedGroupPositions: Set<Int> = [],
+        guessesRemaining: Int = 4
     ) -> Puzzle {
         // Group 0 - Colors
         let group0Words = [
@@ -162,6 +164,7 @@ struct PuzzleFixtures {
             publishedAt: Date(),
             playStatus: playStatus,
             solvedGroupPositions: solvedGroupPositions,
+            guessesRemaining: guessesRemaining,
             groups: [group0, group1, group2, group3]
         )
     }
