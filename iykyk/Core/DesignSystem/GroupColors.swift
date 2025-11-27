@@ -13,13 +13,13 @@ enum GroupColors {
     static func color(for position: Int) -> Color {
         switch position {
         case 0:
-            return Color(red: 0.70, green: 0.65, blue: 0.85)
+            return Color(red: 0.655, green: 0.545, blue: 0.980) // Violet-400
         case 1:
-            return Color(red: 0.55, green: 0.75, blue: 0.90)
+            return Color(red: 0.373, green: 0.667, blue: 0.949) // Blue-400
         case 2:
-            return Color(red: 0.65, green: 0.82, blue: 0.68)
+            return Color(red: 0.298, green: 0.851, blue: 0.392) // Green-400
         case 3:
-            return Color(red: 0.95, green: 0.85, blue: 0.60)
+            return Color(red: 0.988, green: 0.827, blue: 0.302) // Amber-300
         default:
             return .gray
         }
