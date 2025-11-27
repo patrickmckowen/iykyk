@@ -26,21 +26,22 @@ struct GroupRowView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .center, spacing: 0) {
             // Group name TextField
             TextField("Group name", text: $group.title)
-                .font(.title3)
-                .fontWeight(.semibold)
+                .font(.headline)
                 .foregroundStyle(.primary)
                 .saturation(group.title.isEmpty ? 1.3 : 1.0)
+                .multilineTextAlignment(.center)
                 .padding(.horizontal, 4)
+                .padding(.vertical, 16)
                 .focused($focusedField, equals: .groupName(groupIndex: group.position))
                 .submitLabel(.done)
                 .onSubmit {
                     focusedField = nil
                 }
                 .autocorrectionDisabled()
-                .textInputAutocapitalization(.words)
+                .frame(maxWidth: .infinity)
             
             // 4 word tiles in a row
             HStack(spacing: 4) {
@@ -52,8 +53,9 @@ struct GroupRowView: View {
                     )
                 }
             }
+            .padding(.bottom, 12)
         }
-        .padding(12)
+        .padding(.horizontal, 12)
         .background(difficultyColor.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
