@@ -15,6 +15,7 @@ struct PuzzleCreationView: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: PuzzleCreationFocusField?
     @State private var isShowingPreview: Bool = false
+    @State private var scrollPosition: Int?
     
     private let isNewPuzzle: Bool
     @State private var hasBeenInserted: Bool = false
@@ -36,24 +37,25 @@ struct PuzzleCreationView: View {
         VStack(spacing: 0) {
             // Flexible scrollable content
             ScrollView {
-                ScrollViewReader { proxy in
-                    VStack(spacing: 16) {
-                        ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
-                            GroupRowView(
-                                group: group,
-                                focusedField: $focusedField
-                            )
-                            .id(group.position)
-                        }
+                VStack(spacing: 16) {
+                    ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
+                        GroupRowView(
+                            group: group,
+                            focusedField: $focusedField
+                        )
+                        .id(group.position)
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
-                    .onChange(of: focusedField) { _, newValue in
-                        guard let groupIndex = newValue?.groupIndex else { return }
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            proxy.scrollTo(groupIndex, anchor: .center)
-                        }
-                    }
+                }
+                .scrollTargetLayout()
+                .padding(.horizontal)
+                .padding(.top)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrollPosition, anchor: .center)
+            .onChange(of: focusedField) { _, newValue in
+                guard let groupIndex = newValue?.groupIndex else { return }
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    scrollPosition = groupIndex
                 }
             }
             .scrollDismissesKeyboard(.interactively)
