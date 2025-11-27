@@ -27,27 +27,20 @@ struct GroupRowView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Group name TextField with difficulty label
-            HStack {
-                TextField("Group name", text: $group.title)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 4)
-                    .focused($focusedField, equals: .groupName(groupIndex: group.position))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        focusedField = nil
-                    }
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.words)
-                
-                Text(GroupDifficulty.label(for: group.position).uppercased())
-                    .font(.caption2)
-                    .foregroundStyle(difficultyColor)
-                    .fontWeight(.bold)
-            }
+            // Group name TextField
+            TextField("Group name", text: $group.title)
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 4)
+                .focused($focusedField, equals: .groupName(groupIndex: group.position))
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
+                .submitLabel(.done)
+                .onSubmit {
+                    focusedField = nil
+                }
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
             
             // 4 word tiles in a row
             HStack(spacing: 4) {
@@ -67,39 +60,20 @@ struct GroupRowView: View {
                 Rectangle()
                     .fill(.ultraThinMaterial)
                 
-                // Colored gradient layer
-                LinearGradient(
+                // Radial Glow effect for depth
+                RadialGradient(
                     colors: [
                         difficultyColor.opacity(0.15),
                         difficultyColor.opacity(0.05),
                         .clear
                     ],
-                    startPoint: .topTrailing,
-                    endPoint: .bottomLeading
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 300
                 )
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            .white.opacity(0.5),
-                            .white.opacity(0.1)
-                        ],
-                        startPoint: .topTrailing,
-                        endPoint: .bottomLeading
-                    ),
-                    lineWidth: 1
-                )
-        )
-        .shadow(
-            color: difficultyColor.opacity(0.1),
-            radius: 8,
-            x: 0,
-            y: 4
-        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
     }
 }
