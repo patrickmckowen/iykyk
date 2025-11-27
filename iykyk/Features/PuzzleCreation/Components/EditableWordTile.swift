@@ -82,6 +82,11 @@ struct EditableWordTile: View {
                         }
                     }
                     .onChange(of: geometry.size) { _, newSize in
+                        // Only recalculate if size changed significantly (ignore scroll animation micro-changes)
+                        let widthDiff = abs(newSize.width - currentSize.width)
+                        let heightDiff = abs(newSize.height - currentSize.height)
+                        guard widthDiff > 1 || heightDiff > 1 else { return }
+                        
                         currentSize = newSize
                         updateFontSize(availableSize: newSize)
                     }
