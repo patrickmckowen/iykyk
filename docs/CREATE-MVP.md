@@ -134,7 +134,7 @@ This naturally exceeds the ~280pt available above keyboard on iPhone SE, confirm
 
 ### 5.3 Focus Management
 - Tapping a tile/group field brings up keyboard and focuses that field
-- **Keyboard toolbar** Moves focus through fields in logical order (left-to-right, top-to-bottom)
+- Tapping another field moves focus to that field
 - **Return key**: Defocuses current field, keyboard dismisses
 
 ---
