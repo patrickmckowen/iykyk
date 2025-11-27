@@ -69,11 +69,14 @@ private struct WordTileWrapper: View {
     let groupPosition: Int
     
     var body: some View {
-        EditableWordTile(
+        let fieldID: PuzzleCreationFocusField = .word(groupIndex: groupPosition, wordIndex: word.position)
+        
+        return EditableWordTile(
             text: $word.text,
             focusedField: $focusedField,
-            fieldID: .word(groupIndex: groupPosition, wordIndex: word.position)
+            fieldID: fieldID
         )
+        .id(fieldID)
     }
 }
 

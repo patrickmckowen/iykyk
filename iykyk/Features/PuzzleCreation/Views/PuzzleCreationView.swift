@@ -15,7 +15,6 @@ struct PuzzleCreationView: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: PuzzleCreationFocusField?
     @State private var isShowingPreview: Bool = false
-    @State private var scrollPosition: Int?
     
     private let isNewPuzzle: Bool
     @State private var hasBeenInserted: Bool = false
@@ -34,34 +33,36 @@ struct PuzzleCreationView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Flexible scrollable content
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
-                        GroupRowView(
-                            group: group,
-                            focusedField: $focusedField
-                        )
-                        .id(group.position)
+        ScrollViewReader { proxy in
+            VStack(spacing: 0) {
+                // Flexible scrollable content
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
+                            GroupRowView(
+                                group: group,
+                                focusedField: $focusedField
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .disabled(puzzle.isPublished)
+                
+                Spacer()
+            }
+            .onChange(of: focusedField) { _, newValue in
+                guard case let .word(groupIndex, wordIndex) = newValue else { return }
+                let fieldID: PuzzleCreationFocusField = .word(groupIndex: groupIndex, wordIndex: wordIndex)
+                
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        proxy.scrollTo(fieldID, anchor: .center)
                     }
                 }
-                .scrollTargetLayout()
-                .padding(.horizontal)
-                .padding(.top)
             }
-            .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $scrollPosition, anchor: .center)
-            .onChange(of: focusedField) { _, newValue in
-                guard let groupIndex = newValue?.groupIndex else { return }
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    scrollPosition = groupIndex
-                }
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .disabled(puzzle.isPublished)
-            
-            Spacer()
         }
         .frame(maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
