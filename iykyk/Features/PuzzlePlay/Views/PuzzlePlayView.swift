@@ -88,7 +88,7 @@ struct PuzzlePlayView: View {
                     )
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 8)
             
             Spacer()
         }
@@ -125,7 +125,7 @@ struct PuzzlePlayView: View {
                 )
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 8)
         
         // Controls
         VStack(spacing: 16) {
@@ -148,7 +148,7 @@ struct PuzzlePlayView: View {
                 }
             )
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 8)
         
         Spacer()
     }
@@ -166,7 +166,7 @@ struct PuzzlePlayView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.green.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 8)
                 
             case .lost:
                 Text("Better luck next time!")
@@ -177,7 +177,7 @@ struct PuzzlePlayView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 8)
                 
             default:
                 EmptyView()
@@ -198,7 +198,7 @@ struct PuzzlePlayView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.green.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 8)
                 
             case .lost:
                 Text("Game Over")
@@ -209,7 +209,7 @@ struct PuzzlePlayView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 8)
                 
             case .inProgress:
                 EmptyView()
@@ -244,7 +244,7 @@ struct PuzzlePlayView: View {
                 }
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 8)
     }
     
     private func submitGuess() {

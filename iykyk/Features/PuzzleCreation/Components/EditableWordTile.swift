@@ -24,7 +24,7 @@ struct EditableWordTile: View {
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
     private let textHorizontalBuffer: CGFloat = 10
-    private let cornerRadius: CGFloat = 12
+    private let cornerRadius: CGFloat = 16
     
     private var activeBorderColor: Color {
         if case .word(let groupIndex, _) = fieldID {

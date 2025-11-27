@@ -54,9 +54,9 @@ struct GroupRowView: View {
                     )
                 }
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, 4)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 4)
         .background(difficultyColor.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()

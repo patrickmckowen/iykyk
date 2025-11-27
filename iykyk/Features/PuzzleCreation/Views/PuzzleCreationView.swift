@@ -37,7 +37,7 @@ struct PuzzleCreationView: View {
             VStack(spacing: 0) {
                 // Flexible scrollable content
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 8) {
                         ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
                             GroupRowView(
                                 group: group,
@@ -45,7 +45,7 @@ struct PuzzleCreationView: View {
                             )
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 8)
                     .padding(.top)
                 }
                 .scrollDismissesKeyboard(.interactively)
