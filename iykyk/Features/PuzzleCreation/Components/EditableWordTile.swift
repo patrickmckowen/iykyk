@@ -24,13 +24,18 @@ struct EditableWordTile: View {
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
     private let textHorizontalBuffer: CGFloat = 10
-    private let cornerRadius: CGFloat = 8
+    private let cornerRadius: CGFloat = 12
     
     private var activeBorderColor: Color {
         if case .word(let groupIndex, _) = fieldID {
             return GroupColors.color(for: groupIndex)
         }
         return .gray
+    }
+    
+    /// Whether this tile is currently focused
+    private var isFocused: Bool {
+        focusedField == fieldID
     }
     
     var body: some View {
@@ -40,15 +45,16 @@ struct EditableWordTile: View {
                     .lineLimit(2)
                     .textFieldStyle(.plain)
                     .font(.system(size: fontSize, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .saturation(text.isEmpty ? 1.3 : 1.0)
                     .multilineTextAlignment(.center)
                     .padding(tilePadding)
                     .frame(width: geometry.size.width, height: geometry.size.height)
-                    .background(Color(.systemBackground))
+                    .background(.thickMaterial)
                     .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius)
-                            .strokeBorder(
-                                focusedField == fieldID ? activeBorderColor : Color(.systemGray4),
-                                lineWidth: focusedField == fieldID ? 2 : 1
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .strokeBorder(.white.opacity(0.6),
+                                lineWidth: 2
                             )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
