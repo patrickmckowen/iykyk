@@ -34,7 +34,6 @@ struct GroupRowView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 4)
                 .focused($focusedField, equals: .groupName(groupIndex: group.position))
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
                 .submitLabel(.done)
                 .onSubmit {
                     focusedField = nil
@@ -56,7 +55,7 @@ struct GroupRowView: View {
         .padding(12)
         .background {
             ZStack {
-                // Glass material base
+                // Material base
                 Rectangle()
                     .fill(.ultraThinMaterial)
                 
