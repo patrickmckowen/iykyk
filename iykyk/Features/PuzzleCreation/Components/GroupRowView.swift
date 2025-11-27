@@ -60,20 +60,46 @@ struct GroupRowView: View {
                 }
             }
         }
-        .padding(8)
+        .padding(12)
         .background {
-            // Colored gradient layer visible through the glass
-            LinearGradient(
-                colors: [
-                    difficultyColor.opacity(0.25),
-                    difficultyColor.opacity(0.05)
-                ],
-                startPoint: .topTrailing,
-                endPoint: .bottomLeading
-            )
+            ZStack {
+                // Glass material base
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                
+                // Colored gradient layer
+                LinearGradient(
+                    colors: [
+                        difficultyColor.opacity(0.15),
+                        difficultyColor.opacity(0.05),
+                        .clear
+                    ],
+                    startPoint: .topTrailing,
+                    endPoint: .bottomLeading
+                )
+            }
         }
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.5),
+                            .white.opacity(0.1)
+                        ],
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(
+            color: difficultyColor.opacity(0.1),
+            radius: 8,
+            x: 0,
+            y: 4
+        )
         .enableInjection()
     }
 }

@@ -52,8 +52,8 @@ struct EditableWordTile: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .strokeBorder(
-                                isFocused ? activeBorderColor : .white.opacity(0.6),
-                                lineWidth: isFocused ? 2.5 : 1
+                                isFocused ? .black.opacity(0.6) : .white.opacity(0.6),
+                                lineWidth: isFocused ? 2 : 1
                             )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
