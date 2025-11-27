@@ -41,6 +41,7 @@ struct GroupRowView: View {
                     focusedField = nil
                 }
                 .autocorrectionDisabled()
+                .id(PuzzleCreationFocusField.groupName(groupIndex: group.position))
                 .frame(maxWidth: .infinity)
             
             // 4 word tiles in a row

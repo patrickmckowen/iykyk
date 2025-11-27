@@ -54,12 +54,20 @@ struct PuzzleCreationView: View {
                 Spacer()
             }
             .onChange(of: focusedField) { _, newValue in
-                guard case let .word(groupIndex, wordIndex) = newValue else { return }
-                let fieldID: PuzzleCreationFocusField = .word(groupIndex: groupIndex, wordIndex: wordIndex)
+                guard let targetField = newValue else { return }
                 
                 DispatchQueue.main.async {
                     withAnimation(.easeInOut(duration: 0.25)) {
-                        proxy.scrollTo(fieldID, anchor: .center)
+                        let anchor: UnitPoint = {
+                            switch targetField {
+                            case .groupName:
+                                return .top
+                            case .word:
+                                return .center
+                            }
+                        }()
+                        
+                        proxy.scrollTo(targetField, anchor: anchor)
                     }
                 }
             }
