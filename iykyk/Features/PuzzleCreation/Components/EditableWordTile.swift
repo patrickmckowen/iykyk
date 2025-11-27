@@ -33,6 +33,11 @@ struct EditableWordTile: View {
         return .gray
     }
     
+    /// Whether this tile is currently focused
+    private var isFocused: Bool {
+        focusedField == fieldID
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -43,12 +48,12 @@ struct EditableWordTile: View {
                     .multilineTextAlignment(.center)
                     .padding(tilePadding)
                     .frame(width: geometry.size.width, height: geometry.size.height)
-                    .background(Color(.systemBackground))
+                    .background(.white.opacity(0.4))
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .strokeBorder(
-                                focusedField == fieldID ? activeBorderColor : Color(.systemGray4),
-                                lineWidth: focusedField == fieldID ? 2 : 1
+                                isFocused ? activeBorderColor : .white.opacity(0.6),
+                                lineWidth: isFocused ? 2.5 : 1
                             )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: cornerRadius))

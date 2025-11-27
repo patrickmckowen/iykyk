@@ -20,6 +20,11 @@ struct GroupRowView: View {
         return false
     }
     
+    /// The difficulty color for this group's position
+    private var difficultyColor: Color {
+        GroupDifficulty.color(for: group.position)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Group name TextField with difficulty label
@@ -27,7 +32,7 @@ struct GroupRowView: View {
                 TextField("Group name", text: $group.title)
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, 4)
                     .focused($focusedField, equals: .groupName(groupIndex: group.position))
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
@@ -40,8 +45,8 @@ struct GroupRowView: View {
                 
                 Text(GroupDifficulty.label(for: group.position).uppercased())
                     .font(.caption2)
-                    .foregroundStyle(GroupDifficulty.color(for: group.position))
-                    .fontWeight(.medium)
+                    .foregroundStyle(difficultyColor)
+                    .fontWeight(.bold)
             }
             
             // 4 word tiles in a row
@@ -55,6 +60,20 @@ struct GroupRowView: View {
                 }
             }
         }
+        .padding(12)
+        .background {
+            // Colored gradient layer visible through the glass
+            LinearGradient(
+                colors: [
+                    difficultyColor.opacity(0.25),
+                    difficultyColor.opacity(0.1)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .enableInjection()
     }
 }
