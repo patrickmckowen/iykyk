@@ -48,7 +48,6 @@ struct PuzzleCreationView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top)
-                    .padding(.bottom, 100) // Space for bottom actions
                     .onChange(of: focusedField) { _, newValue in
                         guard let groupIndex = newValue?.groupIndex else { return }
                         withAnimation(.easeInOut(duration: 0.3)) {
