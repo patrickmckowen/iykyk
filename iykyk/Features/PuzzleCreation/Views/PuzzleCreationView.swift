@@ -36,17 +36,26 @@ struct PuzzleCreationView: View {
         VStack(spacing: 0) {
             // Flexible scrollable content
             ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
-                        GroupRowView(
-                            group: group,
-                            focusedField: $focusedField
-                        )
+                ScrollViewReader { proxy in
+                    VStack(spacing: 16) {
+                        ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
+                            GroupRowView(
+                                group: group,
+                                focusedField: $focusedField
+                            )
+                            .id(group.position)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    .padding(.bottom, 100) // Space for bottom actions
+                    .onChange(of: focusedField) { _, newValue in
+                        guard let groupIndex = newValue?.groupIndex else { return }
+                        withAnimation {
+                            proxy.scrollTo(groupIndex, anchor: .center)
+                        }
                     }
                 }
-                .padding(.horizontal)
-                .padding(.top)
-                .padding(.bottom, 100) // Space for bottom actions
             }
             .scrollDismissesKeyboard(.interactively)
             .disabled(puzzle.isPublished)
