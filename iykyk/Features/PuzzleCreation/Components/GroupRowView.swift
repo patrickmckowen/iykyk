@@ -53,25 +53,7 @@ struct GroupRowView: View {
             }
         }
         .padding(12)
-        .background {
-            ZStack {
-                // Material base
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                
-                // Radial Glow effect for depth
-                RadialGradient(
-                    colors: [
-                        difficultyColor.opacity(0.15),
-                        difficultyColor.opacity(0.05),
-                        .clear
-                    ],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 300
-                )
-            }
-        }
+        .background(difficultyColor.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
     }
