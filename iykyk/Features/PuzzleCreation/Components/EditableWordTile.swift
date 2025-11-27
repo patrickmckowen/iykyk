@@ -46,10 +46,11 @@ struct EditableWordTile: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: fontSize, weight: .bold))
                     .foregroundStyle(.primary)
+                    .saturation(text.isEmpty ? 1.3 : 1.0)
                     .multilineTextAlignment(.center)
                     .padding(tilePadding)
                     .frame(width: geometry.size.width, height: geometry.size.height)
-                    .background(.regularMaterial)
+                    .background(.thickMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .strokeBorder(

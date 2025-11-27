@@ -32,6 +32,7 @@ struct GroupRowView: View {
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(.primary)
+                .saturation(group.title.isEmpty ? 1.3 : 1.0)
                 .padding(.horizontal, 4)
                 .focused($focusedField, equals: .groupName(groupIndex: group.position))
                 .submitLabel(.done)
