@@ -54,6 +54,7 @@ struct PuzzleCreationView: View {
             Spacer()
         }
         .frame(maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
         .background(
             Color.clear
                 .contentShape(Rectangle())

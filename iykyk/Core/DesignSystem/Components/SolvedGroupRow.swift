@@ -23,6 +23,7 @@ struct SolvedGroupRow: View {
             Text(title.uppercased())
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
             
             Text(wordsList)
                 .font(.system(size: 14))

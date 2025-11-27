@@ -20,32 +20,31 @@ struct GroupRowView: View {
         return false
     }
     
+    /// The difficulty color for this group's position
+    private var difficultyColor: Color {
+        GroupDifficulty.color(for: group.position)
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Group name TextField with difficulty label
-            HStack {
-                TextField("Group name", text: $group.title)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
-                    .focused($focusedField, equals: .groupName(groupIndex: group.position))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isGroupNameFocused)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        focusedField = nil
-                    }
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.words)
-                
-                Text(GroupDifficulty.label(for: group.position).uppercased())
-                    .font(.caption2)
-                    .foregroundStyle(GroupDifficulty.color(for: group.position))
-                    .fontWeight(.medium)
-            }
+        VStack(alignment: .center, spacing: 0) {
+            // Group name TextField
+            TextField("Group name", text: $group.title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .saturation(group.title.isEmpty ? 1.3 : 1.0)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 16)
+                .focused($focusedField, equals: .groupName(groupIndex: group.position))
+                .submitLabel(.done)
+                .onSubmit {
+                    focusedField = nil
+                }
+                .autocorrectionDisabled()
+                .frame(maxWidth: .infinity)
             
             // 4 word tiles in a row
-            HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 ForEach(group.words.sorted(by: { $0.position < $1.position })) { word in
                     WordTileWrapper(
                         word: word,
@@ -54,7 +53,11 @@ struct GroupRowView: View {
                     )
                 }
             }
+            .padding(.bottom, 12)
         }
+        .padding(.horizontal, 12)
+        .background(difficultyColor.opacity(0.2))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
     }
 }
