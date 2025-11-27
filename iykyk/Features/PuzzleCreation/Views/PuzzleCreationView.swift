@@ -36,7 +36,7 @@ struct PuzzleCreationView: View {
         VStack(spacing: 0) {
             // Flexible scrollable content
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 8) {
                     ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
                         GroupRowView(
                             group: group,

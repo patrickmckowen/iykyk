@@ -24,7 +24,7 @@ struct EditableWordTile: View {
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
     private let textHorizontalBuffer: CGFloat = 10
-    private let cornerRadius: CGFloat = 8
+    private let cornerRadius: CGFloat = 12
     
     private var activeBorderColor: Color {
         if case .word(let groupIndex, _) = fieldID {
@@ -50,7 +50,7 @@ struct EditableWordTile: View {
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .background(.white.opacity(0.4))
                     .overlay(
-                        RoundedRectangle(cornerRadius: cornerRadius)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .strokeBorder(
                                 isFocused ? activeBorderColor : .white.opacity(0.6),
                                 lineWidth: isFocused ? 2.5 : 1

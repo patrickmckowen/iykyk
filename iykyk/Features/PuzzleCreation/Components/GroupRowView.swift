@@ -50,7 +50,7 @@ struct GroupRowView: View {
             }
             
             // 4 word tiles in a row
-            HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 ForEach(group.words.sorted(by: { $0.position < $1.position })) { word in
                     WordTileWrapper(
                         word: word,
@@ -60,20 +60,20 @@ struct GroupRowView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(8)
         .background {
             // Colored gradient layer visible through the glass
             LinearGradient(
                 colors: [
                     difficultyColor.opacity(0.25),
-                    difficultyColor.opacity(0.1)
+                    difficultyColor.opacity(0.05)
                 ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
             )
         }
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
     }
 }
