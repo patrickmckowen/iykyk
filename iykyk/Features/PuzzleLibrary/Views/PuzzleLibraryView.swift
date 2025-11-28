@@ -15,6 +15,12 @@ enum CreateFilter: String, CaseIterable {
     case published = "Published"
 }
 
+/// Filter options for the Play tab
+enum PlayFilter: String, CaseIterable {
+    case toPlay = "To Play"
+    case completed = "Completed"
+}
+
 struct PuzzleLibraryView: View {
     var mode: LibraryMode = .create
     
@@ -23,6 +29,7 @@ struct PuzzleLibraryView: View {
     @ObserveInjection private var inject
     
     @State private var createFilter: CreateFilter = .drafts
+    @State private var playFilter: PlayFilter = .toPlay
     
     var body: some View {
         ZStack {
@@ -128,28 +135,88 @@ struct PuzzleLibraryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
+    // MARK: - Play Mode Computed Properties
+    
     private var publishedPuzzles: [Puzzle] {
         puzzles.filter { $0.isPublished }
     }
+    
+    private var toPlayPuzzles: [Puzzle] {
+        publishedPuzzles.filter { $0.playStatus == .notStarted || $0.playStatus == .inProgress }
+    }
+    
+    private var completedPuzzles: [Puzzle] {
+        publishedPuzzles.filter { $0.playStatus == .won || $0.playStatus == .lost }
+    }
+    
+    private var filteredPlayPuzzles: [Puzzle] {
+        switch playFilter {
+        case .toPlay:
+            return toPlayPuzzles
+        case .completed:
+            return completedPuzzles
+        }
+    }
+    
+    // MARK: - Play Mode Body
     
     @ViewBuilder
     private var playModeBody: some View {
         if publishedPuzzles.isEmpty {
             EmptyStateView(mode: .play)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(publishedPuzzles) { puzzle in
-                        NavigationLink(value: puzzle) {
-                            PuzzleCard(puzzle: puzzle, showPlayStatus: true)
-                        }
-                        .buttonStyle(PuzzleCardButtonStyle())
+            VStack(spacing: 0) {
+                // Segmented Picker
+                Picker("Filter", selection: $playFilter) {
+                    ForEach(PlayFilter.allCases, id: \.self) { filter in
+                        Text(filter.rawValue).tag(filter)
                     }
                 }
+                .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.vertical, 12)
+                
+                // Content
+                if filteredPlayPuzzles.isEmpty {
+                    playEmptyStateView
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(filteredPlayPuzzles) { puzzle in
+                                NavigationLink(value: puzzle) {
+                                    PuzzleCard(puzzle: puzzle, showPlayStatus: true)
+                                }
+                                .buttonStyle(PuzzleCardButtonStyle())
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
+                }
             }
         }
+    }
+    
+    @ViewBuilder
+    private var playEmptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: playFilter == .toPlay ? "play.circle" : "checkmark.circle")
+                .font(.system(size: 60))
+                .foregroundStyle(.secondary)
+            
+            Text(playFilter == .toPlay ? "No Puzzles to Play" : "No Completed Puzzles")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text(playFilter == .toPlay 
+                 ? "All caught up! Publish more puzzles to play them here"
+                 : "Complete a puzzle to see it here")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private func deletePuzzle(_ puzzle: Puzzle) {
