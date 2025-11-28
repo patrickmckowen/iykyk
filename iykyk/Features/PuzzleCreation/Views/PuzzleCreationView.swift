@@ -33,25 +33,44 @@ struct PuzzleCreationView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Flexible scrollable content
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
-                        GroupRowView(
-                            group: group,
-                            focusedField: $focusedField
-                        )
+        ScrollViewReader { proxy in
+            VStack(spacing: 0) {
+                // Flexible scrollable content
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(puzzle.groups.sorted(by: { $0.position < $1.position })) { group in
+                            GroupRowView(
+                                group: group,
+                                focusedField: $focusedField
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.top)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .disabled(puzzle.isPublished)
+                
+                Spacer()
+            }
+            .onChange(of: focusedField) { _, newValue in
+                guard let targetField = newValue else { return }
+                
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        let anchor: UnitPoint = {
+                            switch targetField {
+                            case .groupName:
+                                return .top
+                            case .word:
+                                return .center
+                            }
+                        }()
+                        
+                        proxy.scrollTo(targetField, anchor: anchor)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.top)
-                .padding(.bottom, 100) // Space for bottom actions
             }
-            .scrollDismissesKeyboard(.interactively)
-            .disabled(puzzle.isPublished)
-            
-            Spacer()
         }
         .frame(maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
@@ -74,24 +93,6 @@ struct PuzzleCreationView: View {
                     isShowingPreview = true
                 }
                 .disabled(!hasContent)
-            }
-            
-            ToolbarItemGroup(placement: .keyboard) {
-                Button("Done") {
-                    focusedField = nil
-                }
-                
-                Spacer()
-                
-                Button(action: moveToPreviousField) {
-                    Image(systemName: "chevron.up")
-                }
-                .disabled(focusedField == nil || (focusedField == .word(groupIndex: 0, wordIndex: 0)))
-                
-                Button(action: moveToNextField) {
-                    Image(systemName: "chevron.down")
-                }
-                .disabled(isLastField)
             }
         }
         .onAppear {
@@ -129,49 +130,6 @@ struct PuzzleCreationView: View {
         }
     }
     
-    private var isLastField: Bool {
-        if case .word(let g, let w) = focusedField {
-            return g == 3 && w == 3
-        }
-        return false
-    }
-    
-    private func moveToPreviousField() {
-        guard let current = focusedField else { return }
-        
-        switch current {
-        case .word(let g, let w):
-            if w > 0 {
-                focusedField = .word(groupIndex: g, wordIndex: w - 1)
-            } else if g > 0 {
-                focusedField = .word(groupIndex: g - 1, wordIndex: 3)
-            }
-            // If at first field (0, 0), do nothing
-        case .groupName(_):
-            // Group names are not part of keyboard navigation chain
-            break
-        }
-    }
-    
-    private func moveToNextField() {
-        guard let current = focusedField else {
-            focusedField = .word(groupIndex: 0, wordIndex: 0)
-            return
-        }
-        
-        switch current {
-        case .word(let g, let w):
-            if w < 3 {
-                focusedField = .word(groupIndex: g, wordIndex: w + 1)
-            } else if g < 3 {
-                focusedField = .word(groupIndex: g + 1, wordIndex: 0)
-            }
-            // If last field, do nothing (button disabled)
-        case .groupName(_):
-            // Group names are not part of keyboard navigation chain
-            break
-        }
-    }
 }
 
 #Preview {

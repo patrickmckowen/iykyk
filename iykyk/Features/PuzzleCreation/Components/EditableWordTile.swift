@@ -24,7 +24,7 @@ struct EditableWordTile: View {
     private let maxFontSize: CGFloat = 14
     private let tilePadding: CGFloat = 4
     private let textHorizontalBuffer: CGFloat = 10
-    private let cornerRadius: CGFloat = 12
+    private let cornerRadius: CGFloat = 16
     
     private var activeBorderColor: Color {
         if case .word(let groupIndex, _) = fieldID {
@@ -82,6 +82,11 @@ struct EditableWordTile: View {
                         }
                     }
                     .onChange(of: geometry.size) { _, newSize in
+                        // Only recalculate if size changed significantly (ignore scroll animation micro-changes)
+                        let widthDiff = abs(newSize.width - currentSize.width)
+                        let heightDiff = abs(newSize.height - currentSize.height)
+                        guard widthDiff > 1 || heightDiff > 1 else { return }
+                        
                         currentSize = newSize
                         updateFontSize(availableSize: newSize)
                     }

@@ -41,6 +41,7 @@ struct GroupRowView: View {
                     focusedField = nil
                 }
                 .autocorrectionDisabled()
+                .id(PuzzleCreationFocusField.groupName(groupIndex: group.position))
                 .frame(maxWidth: .infinity)
             
             // 4 word tiles in a row
@@ -53,9 +54,9 @@ struct GroupRowView: View {
                     )
                 }
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, 4)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 4)
         .background(difficultyColor.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .enableInjection()
@@ -69,11 +70,14 @@ private struct WordTileWrapper: View {
     let groupPosition: Int
     
     var body: some View {
-        EditableWordTile(
+        let fieldID: PuzzleCreationFocusField = .word(groupIndex: groupPosition, wordIndex: word.position)
+        
+        return EditableWordTile(
             text: $word.text,
             focusedField: $focusedField,
-            fieldID: .word(groupIndex: groupPosition, wordIndex: word.position)
+            fieldID: fieldID
         )
+        .id(fieldID)
     }
 }
 

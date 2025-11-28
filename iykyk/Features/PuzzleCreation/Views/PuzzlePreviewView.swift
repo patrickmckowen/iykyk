@@ -50,7 +50,7 @@ struct PuzzlePreviewView: View {
                     .padding(.bottom, 32)
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 8)
         .padding(.top, 24)
         .navigationTitle(puzzle.isPublished ? "Published" : "Preview")
         .navigationBarTitleDisplayMode(.inline)
