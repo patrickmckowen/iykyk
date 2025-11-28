@@ -89,14 +89,9 @@ struct PuzzleCard: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
-                    if showPlayStatus {
-                        // Play mode: show play status (except for won)
-                        if puzzle.playStatus != .won {
-                            statusBadge(text: playStatusInfo.0, color: playStatusInfo.1)
-                        }
-                    } else {
-                        // Create mode: show draft/published status
-                        statusBadge(text: publishStatusInfo.0, color: publishStatusInfo.1)
+                    // Play mode: show play status (except for won)
+                    if showPlayStatus && puzzle.playStatus != .won {
+                        statusBadge(text: playStatusInfo.0, color: playStatusInfo.1)
                     }
                 }
             }
@@ -135,11 +130,6 @@ struct PuzzleCard: View {
         }
     }
     
-    private var publishStatusInfo: (String, Color) {
-        puzzle.isPublished
-            ? ("Published", .green)
-            : ("Draft", .secondary)
-    }
 }
 
 // MARK: - ButtonStyle for Press Animation
