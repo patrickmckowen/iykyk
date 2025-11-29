@@ -14,6 +14,7 @@ struct SolvedGroupRow: View {
     let words: [String]
     let position: Int
     var showText: Bool = true
+    var showBackground: Bool = true
     
     private var wordsList: String {
         words.joined(separator: ", ")
@@ -36,8 +37,8 @@ struct SolvedGroupRow: View {
         }
         .opacity(showText ? 1 : 0)
         .frame(maxWidth: .infinity)
-        .frame(height: 80)
-        .background(GroupColors.color(for: position))
+        .frame(minHeight: 80) // Allow expansion for tiles during morph
+        .background(showBackground ? GroupColors.color(for: position) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -242,14 +242,34 @@ struct PuzzlePlayView: View {
                         title: group.title,
                         words: tiles.map { $0.text },
                         position: group.position,
-                        showText: isMorphing ? showMorphedRowText : true
+                        showText: isMorphing ? showMorphedRowText : true,
+                        showBackground: isMorphing ? showMorphedRowText : true
                     )
                     .background(
                         // Hidden tiles for matchedGeometryEffect
-                        HStack(spacing: 0) {
+                        HStack(spacing: 8) {
                             ForEach(tiles) { tile in
-                                Color.clear
+                                if isMorphing {
+                                    // Show visible tile that can change color during morph
+                                    GameTileButton(
+                                        text: tile.text,
+                                        isSelected: false,
+                                        isShaking: false,
+                                        shakeAmount: 0,
+                                        isDisabled: true,
+                                        namespace: tileNamespace,
+                                        tileID: tile.id,
+                                        onTap: {},
+                                        isLifted: false,
+                                        morphColor: morphColorForTile(tile)
+                                    )
                                     .matchedGeometryEffect(id: tile.id, in: tileNamespace, isSource: true)
+                                    .aspectRatio(1, contentMode: .fit)
+                                } else {
+                                    Color.clear
+                                        .matchedGeometryEffect(id: tile.id, in: tileNamespace, isSource: true)
+                                        .aspectRatio(1, contentMode: .fit)
+                                }
                             }
                         }
                     )
@@ -300,7 +320,7 @@ struct PuzzlePlayView: View {
         let shuffledIDs = tileIDs.shuffled()
         
         for (index, tileID) in shuffledIDs.enumerated() {
-            let delay = Double(index) * 0.05 // 50ms stagger
+            let delay = Double(index) * 0.08 // 80ms stagger
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
                     _ = liftedTileIDs.insert(tileID)
@@ -309,7 +329,7 @@ struct PuzzlePlayView: View {
         }
         
         // Complete after all tiles lifted
-        let totalLiftDuration = Double(tileIDs.count) * 0.05 + 0.15
+        let totalLiftDuration = Double(tileIDs.count) * 0.08 + 0.4 // Increased pause
         DispatchQueue.main.asyncAfter(deadline: .now() + totalLiftDuration) {
             completion()
         }
@@ -320,18 +340,12 @@ struct PuzzlePlayView: View {
         // Start morph sequence - hide the solved row text initially
         showMorphedRowText = false
         morphingGroupID = groupID
+        morphProgress = 0 // Start with original color
         
-        // Animate morph progress (tile color transition)
-        withAnimation(.easeInOut(duration: 0.3)) {
-            morphProgress = 1.0
-        }
-        
-        // After color transition, trigger position animation via matchedGeometryEffect
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                // Clear lifted state - tiles will animate to solved row position
-                liftedTileIDs.removeAll()
-            }
+        // Step 1: Move tiles to position (slower)
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            // Clear lifted state - tiles will animate to solved row position
+            liftedTileIDs.removeAll()
             
             // Sync solved group to puzzle
             if let group = puzzle.groups.first(where: { $0.id == groupID }) {
@@ -339,17 +353,26 @@ struct PuzzlePlayView: View {
             }
         }
         
-        // After position animation, fade in solved row text
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-            withAnimation(.easeInOut(duration: 0.25)) {
+        // Step 2: Animate color morph (after move completes)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                morphProgress = 1.0
+            }
+        }
+        
+        // Step 3: Fade in solved row text/background
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 showMorphedRowText = true
             }
         }
         
-        // Clean up morph state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            morphingGroupID = nil
-            morphProgress = 0
+        // Clean up morph state - animate tiles out (height shrink)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                morphingGroupID = nil
+                morphProgress = 0
+            }
             
             // Check if game is won and persist
             if session.state == .won {
