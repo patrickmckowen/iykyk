@@ -353,14 +353,20 @@ When the user navigates away and returns, `PuzzlePlaySession` restores from thes
 
 ### 9.3 Gameplay UI
 
-Similar to `PuzzlePreviewView`, using shared components from `Core/DesignSystem/`:
-- Solved groups section using `SolvedGroupRow`.
-- 4×4 grid of active tiles using `GameTileButton`.
+Uses a unified 4×4 grid approach with shared components from `Core/DesignSystem/`:
+- Single `LazyVGrid` displaying all 16 tiles using `GameTileButton`.
+- Solved tiles remain in the grid with colored backgrounds (based on group difficulty position) and are non-interactive.
+- Unsolved tiles are displayed below solved tiles in shuffled order.
 - Controls: `GameControlsView` for Shuffle/Deselect All/Submit buttons.
 - `MistakesRemainingView` indicator (starts at 4).
 
+**Shuffle behavior:**
+- Only unsolved tiles are shuffled; solved tiles stay at the top rows.
+
 **Guess logic:**
 - Delegates to `PuzzlePlaySession` (`toggleSelection`, `submitGuess`, `applyIncorrectGuessPenalty`).
+- **Correct guess**: Tiles animate to top rows and change to group difficulty color.
+- **Incorrect guess**: Tiles lift, shake, then lower and deselect.
 - On **win**: sets `puzzle.playStatus = .won` and saves.
 - On **lose**: sets `puzzle.playStatus = .lost` and saves.
 
@@ -386,11 +392,15 @@ Derived from a `Puzzle`:
 
 ### 10.2 Computed Properties
 
-- `activeTiles`: Tiles not in solved groups.
-- `solvedTiles`: Tiles in solved groups, sorted by `solvedGroupIDs` order.
+- `orderedTiles`: All 16 tiles in display order—solved groups at top (in solve order), then unsolved tiles (shuffled).
 - `canSubmitGuess`: Exactly 4 tiles selected and state is `.inProgress`.
 
-### 10.3 Interactions
+### 10.3 Helper Methods
+
+- `groupDifficultyPosition(for tileID:) -> Int?`: Returns the group's difficulty position (0-3) if the tile is solved, nil otherwise.
+- `isTileSolved(_ tileID:) -> Bool`: Returns whether a tile belongs to a solved group.
+
+### 10.4 Interactions
 
 **`toggleSelection(for:)`**
 - No-op if game not in progress or tile already solved.
@@ -411,7 +421,7 @@ Derived from a `Puzzle`:
 
 **`clearSelection()`** – Deselects all tiles.
 
-**`shuffle()`** – Randomizes tile order.
+**`shuffle()`** – Shuffles only unsolved tiles; solved tiles remain at their positions at the top of the grid.
 
 ---
 
@@ -428,8 +438,8 @@ Derived from a `Puzzle`:
 | Lose condition | Exhaust all 4 incorrect guesses |
 
 **Feedback:**
-- **Correct guess**: Group solved, tiles animate to solved section.
-- **Incorrect guess**: Tiles shake, selection cleared, guess count decremented.
+- **Correct guess**: Selected tiles lift, animate to top rows with group difficulty color, then lower.
+- **Incorrect guess**: Selected tiles lift, shake, lower, then selection cleared and guess count decremented.
 
 ---
 
@@ -456,8 +466,8 @@ The following shared components in `Core/DesignSystem/` are used across play and
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | `AutoSizingTileText` | `Components/` | Auto-sizing text for puzzle tiles |
-| `SolvedGroupRow` | `Components/` | Displays a solved group with title and words |
-| `GameTileButton` | `Components/` | Interactive tile button for gameplay |
+| `SolvedGroupRow` | `Components/` | Displays a solved group with title and words (used in `PuzzlePreviewView` for validation display) |
+| `GameTileButton` | `Components/` | Interactive tile button for gameplay; supports `groupDifficultyPosition` for solved tile coloring |
 | `MistakesRemainingView` | `Components/` | Shows remaining incorrect guesses |
 | `GameControlsView` | `Components/` | Shuffle/Deselect All/Submit button row |
 | `ProgressRing` | `Components/` | Circular progress indicator |
@@ -465,5 +475,5 @@ The following shared components in `Core/DesignSystem/` are used across play and
 | `CapsuleButtonStyle` | `Styles/` | Capsule-shaped button style |
 | `ShakeEffect` | `Effects/` | Horizontal shake animation for incorrect guesses |
 
-These shared components ensure consistent UI across `PuzzlePreviewView` and `PuzzlePlayView` while eliminating code duplication.
+**Note:** `PuzzlePlayView` uses a unified 4×4 grid where solved tiles remain in the grid with colored backgrounds (using `GameTileButton` with `groupDifficultyPosition`), rather than separate `SolvedGroupRow` components.
 
