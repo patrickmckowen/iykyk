@@ -22,7 +22,7 @@ struct GameControlsView: View {
             }
             .buttonStyle(CapsuleButtonStyle())
             
-            Button("Deselect All") {
+            Button("Deselect all") {
                 onDeselectAll()
             }
             .buttonStyle(CapsuleButtonStyle())

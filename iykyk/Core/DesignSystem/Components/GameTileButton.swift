@@ -28,19 +28,13 @@ struct GameTileButton: View {
             GeometryReader { geometry in
                 AutoSizingTileText(text: text, containerSize: geometry.size)
                     .foregroundStyle(Color.primary)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isSelected ? Color(.systemGray4) : Color(.systemGray6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                            )
-                    )
+                    .background(isSelected ? Color(.systemGray4) : Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .matchedGeometryEffect(id: tileID, in: namespace, isSource: false)
             }
         }
         .buttonStyle(.plain)
-        .frame(height: 80)
+        .aspectRatio(1, contentMode: .fit)
         .modifier(ShakeEffect(amount: isShaking ? shakeAmount : 0))
         .disabled(isDisabled)
     }

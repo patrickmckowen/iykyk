@@ -128,9 +128,9 @@ struct PuzzlePlayView: View {
         .padding(.horizontal, 8)
         
         // Controls
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             MistakesRemainingView(remaining: session.guessesRemaining)
-                .padding(.top, 8)
+                .padding(.vertical, 16)
             
             GameControlsView(
                 canDeselect: !session.selectedTileIDs.isEmpty,
