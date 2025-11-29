@@ -282,8 +282,8 @@ The following shared components are available in `Core/DesignSystem/`:
 
 **Components:**
 - `AutoSizingTileText` – Text that auto-sizes to fit within a container
-- `SolvedGroupRow` – Displays a solved group with title and words
-- `GameTileButton` – Interactive tile button for gameplay
+- `SolvedGroupRow` – Displays a solved group with title and words (used in `PuzzlePreviewView`)
+- `GameTileButton` – Interactive tile button for gameplay; supports `groupDifficultyPosition` for solved tile coloring in the unified grid
 - `MistakesRemainingView` – Shows remaining incorrect guesses
 - `GameControlsView` – Shuffle/Deselect All/Submit button row
 - `ProgressRing` – Circular progress indicator

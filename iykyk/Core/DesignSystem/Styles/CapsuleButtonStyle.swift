@@ -15,17 +15,13 @@ struct CapsuleButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .padding(.vertical, 10)
-            .padding(.horizontal, 16)
+            .font(.system(size: 16, weight: .semibold))
+            .padding(.vertical, 14)
+            .padding(.horizontal, 20)
             .foregroundStyle(textColor)
             .background(
                 Capsule()
                     .fill(backgroundColor)
-            )
-            .overlay(
-                Capsule()
-                    .strokeBorder(borderColor, lineWidth: 1)
             )
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
@@ -41,14 +37,7 @@ struct CapsuleButtonStyle: ButtonStyle {
         if isFilled {
             return .primary
         }
-        return .clear
-    }
-    
-    private var borderColor: Color {
-        if isFilled {
-            return .clear
-        }
-        return isEnabled ? .primary : .secondary.opacity(0.5)
+        return isEnabled ? Color(.systemGray6) : Color(.systemGray6)
     }
 }
 

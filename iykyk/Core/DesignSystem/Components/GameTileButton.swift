@@ -15,9 +15,20 @@ struct GameTileButton: View {
     let isShaking: Bool
     let shakeAmount: CGFloat
     let isDisabled: Bool
-    let namespace: Namespace.ID
-    let tileID: UUID
     let onTap: () -> Void
+    
+    // Animation state
+    var isLifted: Bool = false
+    
+    /// When non-nil, displays the tile as solved with the group's difficulty color (0-3)
+    var groupDifficultyPosition: Int? = nil
+    
+    private var backgroundColor: Color {
+        if let position = groupDifficultyPosition {
+            return GroupColors.color(for: position)
+        }
+        return isSelected ? Color(.systemGray4) : Color(.systemGray6)
+    }
     
     var body: some View {
         Button {
@@ -28,27 +39,19 @@ struct GameTileButton: View {
             GeometryReader { geometry in
                 AutoSizingTileText(text: text, containerSize: geometry.size)
                     .foregroundStyle(Color.primary)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isSelected ? Color(.systemGray4) : Color(.systemGray6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                            )
-                    )
-                    .matchedGeometryEffect(id: tileID, in: namespace, isSource: false)
+                    .background(backgroundColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         }
         .buttonStyle(.plain)
-        .frame(height: 80)
+        .aspectRatio(1, contentMode: .fit)
+        .offset(y: isLifted ? -12 : 0)
         .modifier(ShakeEffect(amount: isShaking ? shakeAmount : 0))
         .disabled(isDisabled)
     }
 }
 
 #Preview {
-    @Previewable @Namespace var namespace
-    
     VStack(spacing: 16) {
         HStack(spacing: 8) {
             GameTileButton(
@@ -57,8 +60,6 @@ struct GameTileButton: View {
                 isShaking: false,
                 shakeAmount: 0,
                 isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
                 onTap: {}
             )
             
@@ -68,10 +69,45 @@ struct GameTileButton: View {
                 isShaking: false,
                 shakeAmount: 0,
                 isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
                 onTap: {}
             )
+        }
+        
+        HStack(spacing: 8) {
+            GameTileButton(
+                text: "LIFTED",
+                isSelected: true,
+                isShaking: false,
+                shakeAmount: 0,
+                isDisabled: false,
+                onTap: {},
+                isLifted: true
+            )
+            
+            GameTileButton(
+                text: "SOLVED",
+                isSelected: false,
+                isShaking: false,
+                shakeAmount: 0,
+                isDisabled: true,
+                onTap: {},
+                groupDifficultyPosition: 0
+            )
+        }
+        
+        // Show all difficulty colors
+        HStack(spacing: 8) {
+            ForEach(0..<4, id: \.self) { position in
+                GameTileButton(
+                    text: "D\(position)",
+                    isSelected: false,
+                    isShaking: false,
+                    shakeAmount: 0,
+                    isDisabled: true,
+                    onTap: {},
+                    groupDifficultyPosition: position
+                )
+            }
         }
     }
     .padding()

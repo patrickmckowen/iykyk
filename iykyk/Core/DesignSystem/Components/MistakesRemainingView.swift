@@ -19,7 +19,7 @@ struct MistakesRemainingView: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            Text("Mistakes Remaining:")
+            Text("Mistakes remaining:")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
