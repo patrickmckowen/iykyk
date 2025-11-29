@@ -19,6 +19,17 @@ struct GameTileButton: View {
     let tileID: UUID
     let onTap: () -> Void
     
+    // Animation state
+    var isLifted: Bool = false
+    var morphColor: Color? = nil
+    
+    private var backgroundColor: Color {
+        if let morphColor {
+            return morphColor
+        }
+        return isSelected ? Color(.systemGray4) : Color(.systemGray6)
+    }
+    
     var body: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.15)) {
@@ -28,13 +39,14 @@ struct GameTileButton: View {
             GeometryReader { geometry in
                 AutoSizingTileText(text: text, containerSize: geometry.size)
                     .foregroundStyle(Color.primary)
-                    .background(isSelected ? Color(.systemGray4) : Color(.systemGray6))
+                    .background(backgroundColor)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .matchedGeometryEffect(id: tileID, in: namespace, isSource: false)
             }
         }
         .buttonStyle(.plain)
         .aspectRatio(1, contentMode: .fit)
+        .offset(y: isLifted ? -12 : 0)
         .modifier(ShakeEffect(amount: isShaking ? shakeAmount : 0))
         .disabled(isDisabled)
     }
@@ -65,6 +77,33 @@ struct GameTileButton: View {
                 namespace: namespace,
                 tileID: UUID(),
                 onTap: {}
+            )
+        }
+        
+        HStack(spacing: 8) {
+            GameTileButton(
+                text: "LIFTED",
+                isSelected: true,
+                isShaking: false,
+                shakeAmount: 0,
+                isDisabled: false,
+                namespace: namespace,
+                tileID: UUID(),
+                onTap: {},
+                isLifted: true
+            )
+            
+            GameTileButton(
+                text: "MORPH",
+                isSelected: true,
+                isShaking: false,
+                shakeAmount: 0,
+                isDisabled: false,
+                namespace: namespace,
+                tileID: UUID(),
+                onTap: {},
+                isLifted: true,
+                morphColor: GroupColors.color(for: 0)
             )
         }
     }

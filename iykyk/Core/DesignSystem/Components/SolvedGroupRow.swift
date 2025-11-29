@@ -13,6 +13,7 @@ struct SolvedGroupRow: View {
     let title: String
     let words: [String]
     let position: Int
+    var showText: Bool = true
     
     private var wordsList: String {
         words.joined(separator: ", ")
@@ -33,6 +34,7 @@ struct SolvedGroupRow: View {
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, 4)
         }
+        .opacity(showText ? 1 : 0)
         .frame(maxWidth: .infinity)
         .frame(height: 80)
         .background(GroupColors.color(for: position))

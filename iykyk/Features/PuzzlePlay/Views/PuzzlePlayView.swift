@@ -16,6 +16,14 @@ struct PuzzlePlayView: View {
     @State private var shakeAmount: CGFloat = 0
     @State private var shakingTileIDs: Set<UUID> = []
     
+    // Lift animation state
+    @State private var liftedTileIDs: Set<UUID> = []
+    
+    // Morph animation state
+    @State private var morphingGroupID: UUID? = nil
+    @State private var morphProgress: CGFloat = 0
+    @State private var showMorphedRowText: Bool = true
+    
     @Namespace private var tileNamespace
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -121,7 +129,9 @@ struct PuzzlePlayView: View {
                     tileID: tile.id,
                     onTap: {
                         playSession?.toggleSelection(for: tile.id)
-                    }
+                    },
+                    isLifted: liftedTileIDs.contains(tile.id),
+                    morphColor: morphColorForTile(tile)
                 )
             }
         }
@@ -227,10 +237,12 @@ struct PuzzlePlayView: View {
             ForEach(session.solvedGroupIDs, id: \.self) { groupID in
                 if let group = puzzle.groups.first(where: { $0.id == groupID }),
                    let tiles = groupedTiles[groupID] {
+                    let isMorphing = morphingGroupID == groupID
                     SolvedGroupRow(
                         title: group.title,
                         words: tiles.map { $0.text },
-                        position: group.position
+                        position: group.position,
+                        showText: isMorphing ? showMorphedRowText : true
                     )
                     .background(
                         // Hidden tiles for matchedGeometryEffect
@@ -247,59 +259,136 @@ struct PuzzlePlayView: View {
         .padding(.horizontal, 8)
     }
     
+    /// Returns the morph color for a tile if it's part of the morphing group
+    private func morphColorForTile(_ tile: WordTile) -> Color? {
+        guard let morphingGroupID,
+              tile.groupID == morphingGroupID,
+              morphProgress > 0 else {
+            return nil
+        }
+        
+        // Find the group position to get the correct color
+        if let group = puzzle.groups.first(where: { $0.id == morphingGroupID }) {
+            let groupColor = GroupColors.color(for: group.position)
+            // Interpolate from selected gray to group color based on morphProgress
+            return Color(.systemGray4).interpolate(to: groupColor, progress: morphProgress)
+        }
+        return nil
+    }
+    
     private func submitGuess() {
-        // Capture the selected tile IDs before submitting
         guard let session = playSession else { return }
         let guessedTileIDs = session.selectedTileIDs
         
-        guard let result = session.submitGuess() else { return }
-
-        switch result {
-        case .correct(let groupID, _):
+        // Phase 1: Lift tiles with staggered delays
+        liftTiles(Array(guessedTileIDs)) {
+            // After lift completes, check the guess
+            guard let result = session.submitGuess() else { return }
+            
+            switch result {
+            case .correct(let groupID, _):
+                handleCorrectGuess(session: session, groupID: groupID, tileIDs: guessedTileIDs)
+                
+            case .incorrect:
+                handleIncorrectGuess(session: session, tileIDs: guessedTileIDs)
+            }
+        }
+    }
+    
+    /// Phase 1: Lift tiles with staggered animation
+    private func liftTiles(_ tileIDs: [UUID], completion: @escaping () -> Void) {
+        let shuffledIDs = tileIDs.shuffled()
+        
+        for (index, tileID) in shuffledIDs.enumerated() {
+            let delay = Double(index) * 0.05 // 50ms stagger
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                    _ = liftedTileIDs.insert(tileID)
+                }
+            }
+        }
+        
+        // Complete after all tiles lifted
+        let totalLiftDuration = Double(tileIDs.count) * 0.05 + 0.15
+        DispatchQueue.main.asyncAfter(deadline: .now() + totalLiftDuration) {
+            completion()
+        }
+    }
+    
+    /// Handle correct guess: morph tiles into solved row
+    private func handleCorrectGuess(session: PuzzlePlaySession, groupID: UUID, tileIDs: Set<UUID>) {
+        // Start morph sequence - hide the solved row text initially
+        showMorphedRowText = false
+        morphingGroupID = groupID
+        
+        // Animate morph progress (tile color transition)
+        withAnimation(.easeInOut(duration: 0.3)) {
+            morphProgress = 1.0
+        }
+        
+        // After color transition, trigger position animation via matchedGeometryEffect
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                // Clear lifted state - tiles will animate to solved row position
+                liftedTileIDs.removeAll()
+            }
+            
             // Sync solved group to puzzle
             if let group = puzzle.groups.first(where: { $0.id == groupID }) {
                 puzzle.solvedGroupPositions.insert(group.position)
             }
-            
-            // Animate solved group
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                // Animation happens via state change in session
+        }
+        
+        // After position animation, fade in solved row text
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                showMorphedRowText = true
             }
+        }
+        
+        // Clean up morph state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            morphingGroupID = nil
+            morphProgress = 0
             
             // Check if game is won and persist
             if session.state == .won {
                 puzzle.playStatus = .won
             }
             saveContext()
+        }
+    }
+    
+    /// Handle incorrect guess: shake and lower tiles
+    private func handleIncorrectGuess(session: PuzzlePlaySession, tileIDs: Set<UUID>) {
+        shakingTileIDs = tileIDs
+        
+        // Start shake animation
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
+            shakeAmount = 2.0
+        }
+        
+        // After shake, lower tiles and apply penalty
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            // Reset shake
+            shakeAmount = 0
+            shakingTileIDs.removeAll()
             
-        case .incorrect:
-            // Store which tiles to shake
-            shakingTileIDs = guessedTileIDs
+            // Lower tiles
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                liftedTileIDs.removeAll()
+            }
             
-            // Delay 300ms before starting shake animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-                    shakeAmount = 2.0
-                }
-                
-                // Reset shake after animation completes
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    shakeAmount = 0
-                    shakingTileIDs.removeAll()
+            // Apply penalty after lower animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation {
+                    session.applyIncorrectGuessPenalty()
+                    puzzle.guessesRemaining = session.guessesRemaining
                     
-                    // Apply penalty after shake completes
-                    withAnimation {
-                        session.applyIncorrectGuessPenalty()
-                        
-                        // Sync guesses remaining to puzzle
-                        puzzle.guessesRemaining = session.guessesRemaining
-                        
-                        // Check if game is lost and persist
-                        if session.state == .lost {
-                            puzzle.playStatus = .lost
-                        }
-                        saveContext()
+                    if session.state == .lost {
+                        puzzle.playStatus = .lost
                     }
+                    saveContext()
                 }
             }
         }
