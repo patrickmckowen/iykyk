@@ -57,22 +57,48 @@ class PuzzlePlaySession {
         self.tiles = allTiles.shuffled()
     }
     
-    /// Returns tiles that should be displayed (not yet solved).
-    var activeTiles: [WordTile] {
-        tiles.filter { !solvedGroupIDs.contains($0.groupID) }
+    /// Returns all 16 tiles in display order: solved groups at top (in solve order), then unsolved tiles.
+    var orderedTiles: [WordTile] {
+        // Solved tiles sorted by solve order (index in solvedGroupIDs array)
+        let solved = tiles.filter { solvedGroupIDs.contains($0.groupID) }
+            .sorted { tile1, tile2 in
+                guard let index1 = solvedGroupIDs.firstIndex(of: tile1.groupID),
+                      let index2 = solvedGroupIDs.firstIndex(of: tile2.groupID) else {
+                    return false
+                }
+                if index1 != index2 {
+                    return index1 < index2
+                }
+                // Within same group, maintain original order
+                guard let pos1 = tiles.firstIndex(where: { $0.id == tile1.id }),
+                      let pos2 = tiles.firstIndex(where: { $0.id == tile2.id }) else {
+                    return false
+                }
+                return pos1 < pos2
+            }
+        
+        // Unsolved tiles maintain their current shuffled order
+        let unsolved = tiles.filter { !solvedGroupIDs.contains($0.groupID) }
+        
+        return solved + unsolved
     }
     
-    /// Returns tiles that are part of solved groups, in solution order.
-    var solvedTiles: [WordTile] {
-        let solved = tiles.filter { solvedGroupIDs.contains($0.groupID) }
-        // Sort by solve order (index in solvedGroupIDs array)
-        return solved.sorted { tile1, tile2 in
-            guard let index1 = solvedGroupIDs.firstIndex(of: tile1.groupID),
-                  let index2 = solvedGroupIDs.firstIndex(of: tile2.groupID) else {
-                return false
-            }
-            return index1 < index2
+    /// Returns the group's difficulty position (0-3) if the tile is solved, nil otherwise.
+    func groupDifficultyPosition(for tileID: UUID) -> Int? {
+        guard let tile = tiles.first(where: { $0.id == tileID }),
+              solvedGroupIDs.contains(tile.groupID),
+              let group = groupsByID[tile.groupID] else {
+            return nil
         }
+        return group.position
+    }
+    
+    /// Returns whether a tile belongs to a solved group.
+    func isTileSolved(_ tileID: UUID) -> Bool {
+        guard let tile = tiles.first(where: { $0.id == tileID }) else {
+            return false
+        }
+        return solvedGroupIDs.contains(tile.groupID)
     }
     
     /// Can the user currently submit a guess?
@@ -154,9 +180,17 @@ class PuzzlePlaySession {
         selectedTileIDs.removeAll()
     }
     
-    /// Shuffles the tiles.
+    /// Shuffles only the unsolved tiles, preserving solved tiles at their positions.
     func shuffle() {
-        tiles.shuffle()
+        // Separate solved and unsolved tiles
+        let solvedTiles = tiles.filter { solvedGroupIDs.contains($0.groupID) }
+        var unsolvedTiles = tiles.filter { !solvedGroupIDs.contains($0.groupID) }
+        
+        // Shuffle only unsolved tiles
+        unsolvedTiles.shuffle()
+        
+        // Recombine: solved tiles keep their relative positions, unsolved go after
+        tiles = solvedTiles + unsolvedTiles
     }
 }
 

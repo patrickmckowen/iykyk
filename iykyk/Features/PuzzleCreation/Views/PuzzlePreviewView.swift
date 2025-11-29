@@ -16,7 +16,6 @@ struct PuzzlePreviewView: View {
     @State private var validationIssues: [ValidationIssue] = []
     @State private var tilesVisible: Bool = false
     
-    @Namespace private var tileNamespace
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @ObserveInjection private var inject
@@ -74,8 +73,6 @@ struct PuzzlePreviewView: View {
                     isShaking: false,
                     shakeAmount: 0,
                     isDisabled: true,
-                    namespace: tileNamespace,
-                    tileID: word.id,
                     onTap: {}
                 )
                 .opacity(tilesVisible ? 1 : 0)

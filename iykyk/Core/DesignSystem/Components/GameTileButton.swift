@@ -15,17 +15,17 @@ struct GameTileButton: View {
     let isShaking: Bool
     let shakeAmount: CGFloat
     let isDisabled: Bool
-    let namespace: Namespace.ID
-    let tileID: UUID
     let onTap: () -> Void
     
     // Animation state
     var isLifted: Bool = false
-    var morphColor: Color? = nil
+    
+    /// When non-nil, displays the tile as solved with the group's difficulty color (0-3)
+    var groupDifficultyPosition: Int? = nil
     
     private var backgroundColor: Color {
-        if let morphColor {
-            return morphColor
+        if let position = groupDifficultyPosition {
+            return GroupColors.color(for: position)
         }
         return isSelected ? Color(.systemGray4) : Color(.systemGray6)
     }
@@ -41,7 +41,6 @@ struct GameTileButton: View {
                     .foregroundStyle(Color.primary)
                     .background(backgroundColor)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .matchedGeometryEffect(id: tileID, in: namespace, isSource: false)
             }
         }
         .buttonStyle(.plain)
@@ -53,8 +52,6 @@ struct GameTileButton: View {
 }
 
 #Preview {
-    @Previewable @Namespace var namespace
-    
     VStack(spacing: 16) {
         HStack(spacing: 8) {
             GameTileButton(
@@ -63,8 +60,6 @@ struct GameTileButton: View {
                 isShaking: false,
                 shakeAmount: 0,
                 isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
                 onTap: {}
             )
             
@@ -74,8 +69,6 @@ struct GameTileButton: View {
                 isShaking: false,
                 shakeAmount: 0,
                 isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
                 onTap: {}
             )
         }
@@ -87,24 +80,34 @@ struct GameTileButton: View {
                 isShaking: false,
                 shakeAmount: 0,
                 isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
                 onTap: {},
                 isLifted: true
             )
             
             GameTileButton(
-                text: "MORPH",
-                isSelected: true,
+                text: "SOLVED",
+                isSelected: false,
                 isShaking: false,
                 shakeAmount: 0,
-                isDisabled: false,
-                namespace: namespace,
-                tileID: UUID(),
+                isDisabled: true,
                 onTap: {},
-                isLifted: true,
-                morphColor: GroupColors.color(for: 0)
+                groupDifficultyPosition: 0
             )
+        }
+        
+        // Show all difficulty colors
+        HStack(spacing: 8) {
+            ForEach(0..<4, id: \.self) { position in
+                GameTileButton(
+                    text: "D\(position)",
+                    isSelected: false,
+                    isShaking: false,
+                    shakeAmount: 0,
+                    isDisabled: true,
+                    onTap: {},
+                    groupDifficultyPosition: position
+                )
+            }
         }
     }
     .padding()
