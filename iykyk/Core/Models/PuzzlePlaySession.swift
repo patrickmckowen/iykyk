@@ -26,7 +26,7 @@ enum GuessResult {
 class PuzzlePlaySession {
     // Core session state
     var tiles: [WordTile] = []
-    var selectedTileIDs: Set<UUID> = []
+    var selectedTileIDs: [UUID] = []
     var solvedGroupIDs: [UUID] = []
     var guessesRemaining: Int = 4
     var state: PuzzlePlayState = .inProgress
@@ -117,11 +117,11 @@ class PuzzlePlaySession {
         }
         
         if selectedTileIDs.contains(tileID) {
-            selectedTileIDs.remove(tileID)
+            selectedTileIDs.removeAll(where: { $0 == tileID })
         } else {
             // Only allow selecting up to 4 tiles
             guard selectedTileIDs.count < 4 else { return }
-            selectedTileIDs.insert(tileID)
+            selectedTileIDs.append(tileID)
         }
         
         // Clear last guess result when user changes selection

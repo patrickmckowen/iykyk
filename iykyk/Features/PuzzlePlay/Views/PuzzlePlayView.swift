@@ -218,9 +218,7 @@ struct PuzzlePlayView: View {
     
     /// Lift tiles with staggered animation
     private func liftTiles(_ tileIDs: [UUID], completion: @escaping () -> Void) {
-        let shuffledIDs = tileIDs.shuffled()
-        
-        for (index, tileID) in shuffledIDs.enumerated() {
+        for (index, tileID) in tileIDs.enumerated() {
             let delay = Double(index) * 0.08
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
@@ -257,8 +255,8 @@ struct PuzzlePlayView: View {
     }
     
     /// Handle incorrect guess: shake and deselect tiles
-    private func handleIncorrectGuess(session: PuzzlePlaySession, tileIDs: Set<UUID>) {
-        shakingTileIDs = tileIDs
+    private func handleIncorrectGuess(session: PuzzlePlaySession, tileIDs: [UUID]) {
+        shakingTileIDs = Set(tileIDs)
         
         // Start shake animation
         withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {

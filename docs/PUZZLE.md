@@ -384,7 +384,7 @@ Derived from a `Puzzle`:
 - **Restores state** from `puzzle.solvedGroupIDs` and `puzzle.guessesRemaining` for in-progress games.
 
 **Mutable state:**
-- `selectedTileIDs: Set<UUID>`
+- `selectedTileIDs: [UUID]` (array preserves selection order for lift animation)
 - `solvedGroupIDs: [UUID]` (in solve order, restored from puzzle)
 - `guessesRemaining: Int` (restored from puzzle, defaults to 4)
 - `state: PuzzlePlayState = .inProgress`
@@ -438,8 +438,8 @@ Derived from a `Puzzle`:
 | Lose condition | Exhaust all 4 incorrect guesses |
 
 **Feedback:**
-- **Correct guess**: Selected tiles lift, animate to top rows with group difficulty color, then lower.
-- **Incorrect guess**: Selected tiles lift, shake, lower, then selection cleared and guess count decremented.
+- **Correct guess**: Selected tiles lift (in selection order), animate to top rows with group difficulty color, then lower.
+- **Incorrect guess**: Selected tiles lift (in selection order), shake, lower, then selection cleared and guess count decremented.
 
 ---
 
