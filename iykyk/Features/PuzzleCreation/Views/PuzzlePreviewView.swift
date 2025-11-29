@@ -16,6 +16,7 @@ struct PuzzlePreviewView: View {
     @State private var validationIssues: [ValidationIssue] = []
     @State private var tilesVisible: Bool = false
     
+    @Namespace private var tileNamespace
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @ObserveInjection private var inject
@@ -67,14 +68,23 @@ struct PuzzlePreviewView: View {
     private var previewGrid: some View {
         LazyVGrid(columns: columns, spacing: 8) {
             ForEach(Array(shuffledWords.enumerated()), id: \.element.id) { index, word in
-                PreviewTile(text: word.text)
-                    .opacity(tilesVisible ? 1 : 0)
-                    .offset(y: tilesVisible ? 0 : 20)
-                    .animation(
-                        .spring(response: 0.4, dampingFraction: 0.7)
-                        .delay(Double(index) * 0.03),
-                        value: tilesVisible
-                    )
+                GameTileButton(
+                    text: word.text,
+                    isSelected: false,
+                    isShaking: false,
+                    shakeAmount: 0,
+                    isDisabled: true,
+                    namespace: tileNamespace,
+                    tileID: word.id,
+                    onTap: {}
+                )
+                .opacity(tilesVisible ? 1 : 0)
+                .offset(y: tilesVisible ? 0 : 20)
+                .animation(
+                    .spring(response: 0.4, dampingFraction: 0.7)
+                    .delay(Double(index) * 0.03),
+                    value: tilesVisible
+                )
             }
         }
     }
@@ -151,28 +161,6 @@ struct PuzzlePreviewView: View {
         } catch {
             print("Failed to publish puzzle: \(error)")
         }
-    }
-}
-
-// MARK: - Preview Tile Component
-
-private struct PreviewTile: View {
-    let text: String
-    
-    var body: some View {
-        GeometryReader { geometry in
-            AutoSizingTileText(text: text, containerSize: geometry.size)
-                .foregroundStyle(Color.primary)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemGray6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                        )
-                )
-        }
-        .frame(height: 80)
     }
 }
 
