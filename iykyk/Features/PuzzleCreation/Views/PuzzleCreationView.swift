@@ -51,6 +51,21 @@ struct PuzzleCreationView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .disabled(puzzle.isPublished)
                 
+                #if DEBUG
+                Button {
+                    fillWithTestData()
+                } label: {
+                    Text("Fill Test Data")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.orange)
+                        .clipShape(Capsule())
+                }
+                .padding(.vertical, 12)
+                #endif
+                
                 Spacer()
             }
             .onChange(of: focusedField) { _, newValue in
@@ -129,6 +144,25 @@ struct PuzzleCreationView: View {
             print("Failed to save puzzle: \(error)")
         }
     }
+    
+    #if DEBUG
+    private func fillWithTestData() {
+        let samplePuzzle = PuzzleFixtures.sampleCompletedPuzzle()
+        let sampleGroups = samplePuzzle.groups.sorted { $0.position < $1.position }
+        let currentGroups = puzzle.groups.sorted { $0.position < $1.position }
+        
+        for (currentGroup, sampleGroup) in zip(currentGroups, sampleGroups) {
+            currentGroup.title = sampleGroup.title
+            
+            let currentWords = currentGroup.words.sorted { $0.position < $1.position }
+            let sampleWords = sampleGroup.words.sorted { $0.position < $1.position }
+            
+            for (currentWord, sampleWord) in zip(currentWords, sampleWords) {
+                currentWord.text = sampleWord.text
+            }
+        }
+    }
+    #endif
     
 }
 
